@@ -1,0 +1,13 @@
+Domain WRAM
+SystemID SNES
+001100	w	h	0	WRAM	Passcode first digit
+001102	w	h	0	WRAM	Passcode second digit
+001104	w	h	0	WRAM	Passcode third digit
+001106	w	h	0	WRAM	Passcode fourth digit
+001108	w	h	0	WRAM	Passcode fifth digit
+000303	b	u	0	WRAM	1/50 of second
+000304	b	u	0	WRAM	Seconds
+000305	b	u	0	WRAM	Minutes
+000308	b	u	0	WRAM	Seconds? tens
+000309	b	u	0	WRAM	Seconds? units
+

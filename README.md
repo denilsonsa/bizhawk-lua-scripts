@@ -2,6 +2,8 @@
 
 Lua scripts I've written for BizHawk/EmuHawk emulator.
 
+Also included are some *RAM watch* files, which contain RAM locations I've discovered. These locations might not be 100% accurate, as they were found via RAM search and trial and error..
+
 ## See also
 
 * http://www.lua.org/manual/ - Official Lua Reference Manual

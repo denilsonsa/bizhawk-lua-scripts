@@ -1,0 +1,25 @@
+Domain 68K RAM
+SystemID GEN
+7DF6	w	h	1	68K RAM	X (camera? scroll?)
+7DFA	w	h	1	68K RAM	X velocity (camera)
+7E02	w	h	1	68K RAM	X (camera? scroll?)
+7E04	w	h	1	68K RAM	Y (camera? scroll?)
+7E06	w	h	1	68K RAM	X (camera? scroll?)
+7E29	b	h	1	68K RAM	Score - 0x30~0x39
+7E2A	b	h	1	68K RAM	Score - 0x30~0x39
+7E2B	b	h	1	68K RAM	Score - 0x30~0x39 - thousands
+7E2C	b	h	1	68K RAM	Score - 0x30~0x39 - hundreds
+7E2D	b	h	1	68K RAM	Score - 0x30~0x39 - tens
+7E2E	b	h	1	68K RAM	Score - 0x30~0x39 - units
+7E3C	b	h	1	68K RAM	Lives - 0x30~0x39 - units
+7E3F	b	h	1	68K RAM	Continues - 0~unlimited
+7E42	w	h	1	68K RAM	X (camera? scroll?)
+7E44	w	h	1	68K RAM	Y (camera? scroll?)
+EFE0	b	h	1	68K RAM	Apples - 0x30~0x39 - tens
+EFE1	b	h	1	68K RAM	Apples - 0x30~0x39 - units
+EFE2	b	h	1	68K RAM	Gems - 0x30~0x39 - tens
+EFE3	b	h	1	68K RAM	Gems - 0x30~0x39 - units
+EFFA	b	h	1	68K RAM	Health - 00~08
+F003	b	h	1	68K RAM	Genies - 00~unlimited
+F400	w	h	1	VRAM	Sprite Table
+

@@ -1,0 +1,8 @@
+Domain RAM
+SystemID NES
+0106	w	h	0	RAM	3 nibbles = Energy
+0877	b	h	0	WRAM	Energy tanks
+0879	b	u	0	WRAM	Missiles
+087A	b	u	0	WRAM	Missile capacity
+087D	d	u	0	WRAM	Game time
+

@@ -1,0 +1,7 @@
+Domain RAM
+SystemID NES
+00E1	b	u	0	RAM	Lives (display only, gets overwritten)
+0552	b	u	0	RAM	Lives
+0544	b	u	0	RAM	Bullets (units)
+0542	b	u	0	RAM	Bullets (tens)
+
