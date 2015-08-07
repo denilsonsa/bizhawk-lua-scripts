@@ -110,9 +110,10 @@ Defines a form window, which will contain all other UI elements.
 
 #### Z.Form instance properties
 
-* `:Left()`, `:Right()`, `:Top()`, `:Bottom()` - Coordinates at the screen.
-* `:Width()`, `:Height()` - Size of the form window (external size, including the borders and titlebar).
-* `:Title()` or `:Text()` - Title of the form window.
+* `:Left()`, `:Right()`, `:Top()`, `:Bottom()` - Coordinates at the screen. (integer)
+* `:Width()`, `:Height()` - Size of the form window (external size, including the borders and titlebar). (integer)
+* `:Title()` or `:Text()` - Title of the form window. (string)
+* `:TopMost()` - Set the form window always-on-top of other windows. (boolean)
 
 ### Z.Stacking
 

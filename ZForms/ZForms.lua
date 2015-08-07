@@ -307,6 +307,7 @@ Z.Form.Bottom = Z.NewProperty("int", "Bottom")
 Z.Form.Width  = Z.NewProperty("int", "Width")
 Z.Form.Height = Z.NewProperty("int", "Height")
 
+Z.Form.TopMost = Z.NewProperty("boolean", "TopMost")
 Z.Form.Title   = Z.NewProperty("string", "Text")
 Z.Form.Text    = Z.NewProperty("string", "Text")
 
