@@ -1,20 +1,29 @@
--- Force reloading this module.
+-- Force reloading the ZForms module.
+-- Very useful while making changes to the ZForms.lua file.
+-- Don't add this line to your scripts!
 package.loaded["ZForms"] = nil
 
 Z = require("ZForms")
 
 zform_demo_index_is_loaded = true
 
+zform_current_demo = nil
+
 
 function run_external_demo(name)
+  if zform_current_demo and zform_current_demo.stop then
+    zform_current_demo.stop()
+  end
+
   -- If the module had been loaded before, let's force a reload.
   package.loaded[name] = nil
-  local demo = require(name)
-  demo.run_demo()
+  zform_current_demo = require(name)
+
+  zform_current_demo.start()
 end
 
 
-form_description = {
+form_definition = {
   type = "form",
   width = 200,
   where = 1,
@@ -54,9 +63,7 @@ form_description = {
   },
 }
 
-ff = Z.Form(form_description)
-ff:update_coords()
-ff:build()
+ff = Z.Form(form_definition)
 
 
 while true do

@@ -1,25 +1,27 @@
 local Z = require("ZForms")
 
+local almost_empty_form
+local better_form
 
-local function run_demo()
+
+local function start_demo()
   -- Creating some simple forms using ZForms.
 
   -- The minimum code, just a useless form window with a text label.
-  local almost_empty_form = Z.Form({
+  almost_empty_form = Z.Form({
     type = "form",
     child = {
       type = "label", label = "Almost empty form!",
     }
   })
-  almost_empty_form:update_coords()
-  almost_empty_form:build()
 
   -- A Z.Form must have a single child widget. Since most of the time you want
-  -- multiple widgets in the same window, you can use a layout widget to hold
-  -- several children, and also to position them correctly.
+  -- multiple widgets in the same window, you can use a layout manager
+  -- pseudo-widget to hold several children, and also to position them
+  -- correctly or automatically.
 
-  -- Using Z.Stacking to put several widgets in the same form window.
-  local better_form = Z.Form({
+  -- Using Z.Stacking to place several widgets in the same form window.
+  better_form = Z.Form({
     type = "form",
     title = "Custom title!",
     width = 200,
@@ -36,17 +38,23 @@ local function run_demo()
       }
     }
   })
-  better_form:update_coords()
-  better_form:build()
+end
+
+
+local function stop_demo()
+  almost_empty_form:destroy()
+  better_form:destroy()
 end
 
 
 if zform_demo_index_is_loaded then
   return {
-    run_demo = run_demo,
+    start = start_demo,
+    stop = stop_demo,
   }
 else
-  run_demo()
+
+  start_demo()
 
   while true do
     -- You must call this function on your main loop.

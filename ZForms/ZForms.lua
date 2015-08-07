@@ -200,11 +200,20 @@ Z.CLIENT_BORDER_WIDTH = 8  -- The bevel of the main window.
 Z.CLIENT_BORDER_HEIGHT = 70  -- The bevel of the main window.
 
 function Z.construct_children(children)
+  -- For each children, calls the Z object constructor.
+  -- In other words, converts the definitions to actual objects.
+
   local new_children = {}
   for i,t in ipairs(children) do
     if t ~= nil and t ~= Z.UNDEFINED then
-      local obj = Z.TYPE_STRING_TO_CLASS[t.type](t)
-      new_children[i] = obj
+      if t.is_object then
+        -- If this children is already an object instance, use it directly.
+        new_children[i] = t
+      else
+        -- Call the constructor for this object.
+        local obj = Z.TYPE_STRING_TO_CLASS[t.type](t)
+        new_children[i] = obj
+      end
     end
   end
   return new_children
@@ -214,6 +223,8 @@ end
 -- Base classes containing some common methods.
 
 Z.BaseClass = Z.NewClass()
+
+Z.BaseClass.is_object = true
 
 function Z.BaseClass.update_coords(self, x, y, available_width, available_height)
   -- Default behavior is to expand to all available space.
@@ -299,20 +310,30 @@ Z.Form.Height = Z.NewProperty("int", "Height")
 Z.Form.Title   = Z.NewProperty("string", "Text")
 Z.Form.Text    = Z.NewProperty("string", "Text")
 
+function Z.Form:destroy()
+  return forms.destroy(self.handle)
+end
+
 function Z.Form:init(initial_values)
   Z.SetInitialInstanceAttributes(
     self,
     Z.table_join(Z.COMMON_WIDGET_ATTRIBUTES, {
       title = "Lua script window",
+      child = Z.UNDEFINED,
       where = Z.UNDEFINED,
       default_width = 128,
       default_height = 128,
-      child = Z.UNDEFINED,
     }),
     initial_values)
 
   local children = Z.construct_children({[1] = self.child})
   self.child = children[1]
+
+  -- Auto-creating the form window.
+  -- Because this is what users want 99% of the time.
+  -- TODO: Add some way to create the Z.Form object, but not create the window.
+  self:update_coords()
+  self:build()
 end
 
 function Z.Form:update_coords()
@@ -455,7 +476,7 @@ function Z.Form:build()
 end
 
 ---------------------------------------------------------------------------
--- Z.Stacking object.
+-- Z.Stacking layout manager object.
 
 Z.Stacking = Z.NewClass(Z.BaseClass)
 Z.Stacking.type = "stacking"
@@ -464,7 +485,7 @@ function Z.Stacking:init(initial_values)
   Z.SetInitialInstanceAttributes(
     self,
     Z.table_join(Z.COMMON_COORD_ATTRIBUTES, {
-      children_base_height = 24,
+      children_default_height = 24,
       children = {},
     }),
     initial_values)
@@ -482,7 +503,7 @@ function Z.Stacking:update_coords(x, y, available_width, available_height)
   local child_y = y
 
   for i,c in ipairs(self.children) do
-    c:update_coords(child_x, child_y, available_width, self.children_base_height)
+    c:update_coords(child_x, child_y, available_width, self.children_default_height)
 
     if child_y ~= Z.UNDEFINED then
       child_y = child_y + c.height
