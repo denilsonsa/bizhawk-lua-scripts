@@ -16,7 +16,7 @@ Objectives:
     * easier to use,
     * easier to understand,
     * easier to write.
-* Provide convenience functions/methods/stuff when appropriate.
+* Provide convenience functions/methods/behavior when appropriate.
 * Automatically calculate positions and sizes, when desired and when possible.
 * Encourage people to build UIs for their scripts.
 * Encourage people to modify and expand ZForms.
@@ -30,13 +30,17 @@ API Documentation
 
 Make sure `ZForms.lua` file is in the same directory as your Lua script. Then just add the following code to your script:
 
+```lua
     Z = require("ZForms")
+```
 
 If you make changes to `ZForms.lua` file, those changes won't be visible until you reload the module. You can force reloading it by writing:
 
+```lua
     -- Only required if you modify ZForms.lua.
     package.loaded["ZForms"] = nil
     Z = require("ZForms")
+```
 
 ### Basic concepts
 
@@ -48,12 +52,14 @@ The constructor for each UI object receives a single parameter: a Lua table defi
 
 UI widgets that are mapped to .Net objects usually have access to properties of the underlying .Net object. For convenience, such properties are implemented as methods that receive one optional parameter (a design inspired by jQuery APIs). They can be used like this:
 
+```lua
     -- Retrieves the current title from the Form.
     print(myform:Title())
     -- Sets a new title.
     myform:Title("New title")
     -- It is possible to set and get the title in the same call.
     print(myform:Title("Yet another title"))
+```
 
 By Lua convention, methods are just functions that receive the instance as the first parameter. This parameter is implicitly defined as `self` when using the `function object:method(param1)` notation, or explicitly defined when using `object.method = function(self, param1)` notation.
 
@@ -82,10 +88,12 @@ Some objects are responsible for defining the layout of other objects. So far, `
 
 Defines a form window, which will contain all other UI elements.
 
+```lua
     myform = Z.Form({
       type = "form",
       child = { ... },
     })
+```
 
 #### Z.Form definition attributes
 
@@ -110,6 +118,7 @@ Defines a form window, which will contain all other UI elements.
 
 Layout manager that places the children elements vertically after each other. Their width will be expanded to the maximum available width. The height will be automatically calculated. If you are familiar with HTML and CSS, it is similar to `display: block`.
 
+```lua
     {
       type = "stacking",
       children = {
@@ -118,6 +127,7 @@ Layout manager that places the children elements vertically after each other. Th
         { ... },
       },
     }
+```
 
 #### Z.Stacking definition attributes
 
