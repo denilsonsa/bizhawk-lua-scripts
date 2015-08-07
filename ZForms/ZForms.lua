@@ -1,7 +1,14 @@
--- ZForms
+-- Z.Forms
 --
 -- An easy-to-use UI building library.
 -- Works as a wrapper around BizHawk "forms" module.
+--
+-- Add the following line to your Lua script:
+-- Z = require("ZForms")
+
+
+-- The module contents.
+local Z = {}
 
 
 ---------------------------------------------------------------------------
@@ -10,11 +17,11 @@
 -- Useful single value for the concept of "not initialized".
 -- Useful to mark table keys that exist but have no value yet.
 -- A table key with nil value is the same as a non-existent key.
-UNDEFINED = setmetatable({}, {
+Z.UNDEFINED = setmetatable({}, {
   __tostring = function() return "UNDEFINED" end,
 })
 
-function table_join(...)
+function Z.table_join(...)
   -- Receives an arbitrary number of tables as arguments and join them into a
   -- new table. Returns this new table.
 
@@ -33,7 +40,7 @@ end
 ---------------------------------------------------------------------------
 -- Generic functions for working with objects.
 
-function NewClass()
+function Z.NewClass()
   -- This function encapsulates the boilerplate required to declare a new class.
   -- http://lua-users.org/wiki/ObjectOrientationTutorial
   -- http://www.lua.org/pil/16.1.html
@@ -48,7 +55,7 @@ function NewClass()
   return t
 end
 
-function ObjectConstructor(cls, default_attributes, init_values)
+function Z.ObjectConstructor(cls, default_attributes, init_values)
   -- This function has the code for creating a new object of a class.
   --
   -- cls                = The object class.
@@ -56,7 +63,7 @@ function ObjectConstructor(cls, default_attributes, init_values)
   -- init_values        = Initialization values for attributes.
 
   -- Making a copy of default_attributes.
-  local instance = table_join(default_attributes)
+  local instance = Z.table_join(default_attributes)
 
   -- Updating attributes with values from initialization.
   if init_values ~= nil then
@@ -73,34 +80,34 @@ function ObjectConstructor(cls, default_attributes, init_values)
 end
 
 ---------------------------------------------------------------------------
--- Basic ZForms code.
+-- Basic Z.Forms code.
 
-COMMON_COORD_ATTRIBUTES = {
-  x = UNDEFINED,
-  y = UNDEFINED,
-  width = UNDEFINED,
-  height = UNDEFINED,
+Z.COMMON_COORD_ATTRIBUTES = {
+  x = Z.UNDEFINED,
+  y = Z.UNDEFINED,
+  width = Z.UNDEFINED,
+  height = Z.UNDEFINED,
 }
-COMMON_WIDGET_ATTRIBUTES = table_join(COMMON_COORD_ATTRIBUTES, {
-  id = UNDEFINED,  -- TODO: use id for something
-  onclick = UNDEFINED,  -- onclick is only supported on Button, Checkbox.
-  handle = UNDEFINED,  -- Numeric id used by BizHawk.
+Z.COMMON_WIDGET_ATTRIBUTES = Z.table_join(Z.COMMON_COORD_ATTRIBUTES, {
+  id = Z.UNDEFINED,  -- TODO: use id for something
+  onclick = Z.UNDEFINED,  -- onclick is only supported on Button, Checkbox.
+  handle = Z.UNDEFINED,  -- Numeric id used by BizHawk.
   update_coords = function(self, x, y, available_width, available_height)
     -- Default behavior is to expand to all available space.
     -- However, if width/height had been previously defined, those values will be preserved.
     -- x/y coordinates will always be modified.
     self.x = x
     self.y = y
-    if self.width == UNDEFINED then
+    if self.width == Z.UNDEFINED then
       self.width = available_width
     end
-    if self.height == UNDEFINED then
+    if self.height == Z.UNDEFINED then
       self.height = available_height
     end
   end,
   _set_text_align = function(self)
-    if self.align ~= UNDEFINED then
-      local value = CONTENT_ALIGNMENT[string.lower(self.align)]
+    if self.align ~= Z.UNDEFINED then
+      local value = Z.CONTENT_ALIGNMENT[string.lower(self.align)]
       if value ~= nil then
         forms.setproperty(self.handle, 'TextAlign', value)
       end
@@ -108,8 +115,8 @@ COMMON_WIDGET_ATTRIBUTES = table_join(COMMON_COORD_ATTRIBUTES, {
   end,
 })
 
--- Based on .Net System.Drawing.ContentAlignment, used by ZCheckbox and ZLabel.
-CONTENT_ALIGNMENT = {
+-- Based on .Net System.Drawing.ContentAlignment, used by Z.Checkbox and Z.Label.
+Z.CONTENT_ALIGNMENT = {
   topleft = 1,
   topcenter = 2,
   topright = 4,
@@ -130,25 +137,33 @@ CONTENT_ALIGNMENT = {
   ["bottom-right"] = 1024,
 }
 
-function construct_children(children)
+-- Constants (that may, someday, be auto-calculated).
+Z.BORDER_WIDTH = 8  -- The form window bevel.
+Z.BORDER_HEIGHT = 28  -- The form window bevel.
+Z.CLIENT_BORDER_WIDTH = 8  -- The bevel of the main window.
+Z.CLIENT_BORDER_HEIGHT = 70  -- The bevel of the main window.
+
+function Z.construct_children(children)
   local new_children = {}
   for i,t in ipairs(children) do
-    local obj = form_classes[t.type]:new(t)
-    new_children[i] = obj
+    if t ~= nil and t ~= Z.UNDEFINED then
+      local obj = Z.form_classes[t.type]:new(t)
+      new_children[i] = obj
+    end
   end
   return new_children
 end
 
 ---------------------------------------------------------------------------
--- ZForms event handling functions.
+-- Z.Forms event handling functions.
 
--- Populated by click_handler_wrapper(), consumed by zform_run_event_handlers().
-form_event_handlers_to_be_run = {}
+-- Populated by Z.click_handler_wrapper(), consumed by Z.form_run_event_handlers().
+Z.form_event_handlers_to_be_run = {}
 
 -- This function should be added to the main loop!
-function zform_run_event_handlers()
-  local funcs = form_event_handlers_to_be_run
-  form_event_handlers_to_be_run = {}
+function Z.form_run_event_handlers()
+  local funcs = Z.form_event_handlers_to_be_run
+  Z.form_event_handlers_to_be_run = {}
 
   for i,v in ipairs(funcs) do
     funcs[i]()
@@ -158,77 +173,77 @@ end
 -- Some BizHawk functions cannot be executed from within the GUI thread,
 -- which is the case for click handlers.
 -- This function is a wrapper to work around this issue.
-function click_handler_wrapper(func)
+function Z.click_handler_wrapper(func)
   return function()
-    if func and func ~= UNDEFINED then
-      form_event_handlers_to_be_run[#form_event_handlers_to_be_run + 1] = func
+    if func and func ~= Z.UNDEFINED then
+      Z.form_event_handlers_to_be_run[#Z.form_event_handlers_to_be_run + 1] = func
     end
-    --pretty.dump(form_event_handlers_to_be_run)
   end
 end
 
 ---------------------------------------------------------------------------
--- ZForm object.
+-- Z.Form object.
 
-ZForm = NewClass()
+Z.Form = Z.NewClass()
 
-function ZForm:new(init)
-  local instance = ObjectConstructor(
+function Z.Form:new(init)
+  local instance = Z.ObjectConstructor(
     self,
-    table_join(COMMON_COORD_ATTRIBUTES, {
+    Z.table_join(Z.COMMON_COORD_ATTRIBUTES, {
       type = "form",
       title = "Lua script window",
-      where = UNDEFINED,
-      base_width = 128,
-      base_height = 128,
-      border_width = 8,  -- The window bevel.
-      border_height = 28,  -- The window bevel.
-      client_border_width = 8,  -- The bevel of the main window.
-      client_border_height = 70,  -- The bevel of the main window.
-      handle = UNDEFINED,
-      child = UNDEFINED,
+      where = Z.UNDEFINED,
+      default_width = 128,
+      default_height = 128,
+      handle = Z.UNDEFINED,
+      child = Z.UNDEFINED,
     }),
     init)
 
-  local children = construct_children({[1] = instance.child})
+  local children = Z.construct_children({[1] = instance.child})
   instance.child = children[1]
 
   return instance
 end
 
-function ZForm:update_coords()
+function Z.Form:update_coords()
   -- update_coords() for the Form does not receive any parameters.
+
+  if self.child == nil or self.child == Z.UNDEFINED then
+    print("Error! Form must have a child.")
+    return
+  end
 
   -- First execute the method with UNDEFINED values, to calculate and propagate
   -- automatic dimensions.
-  self.child:update_coords(UNDEFINED, UNDEFINED, UNDEFINED, UNDEFINED)
+  self.child:update_coords(Z.UNDEFINED, Z.UNDEFINED, Z.UNDEFINED, Z.UNDEFINED)
 
   -- Calculate the suggested dimensions.
-  local width = self.base_width
-  local height = self.base_height
-  if self.width ~= UNDEFINED then
-    width = self.width - self.border_width
+  local width = self.default_width
+  local height = self.default_height
+  if self.width ~= Z.UNDEFINED then
+    width = self.width - Z.BORDER_WIDTH
   end
-  if self.height ~= UNDEFINED then
-    height = self.height - self.border_height
+  if self.height ~= Z.UNDEFINED then
+    height = self.height - Z.BORDER_HEIGHT
   end
 
   -- Run again with suggested dimensions.
   self.child:update_coords(0, 0, width, height)
 
   -- Update the width/height, if undefined.
-  if self.width == UNDEFINED then
-    self.width = self.child.width + self.border_width
+  if self.width == Z.UNDEFINED then
+    self.width = self.child.width + Z.BORDER_WIDTH
   end
-  if self.height == UNDEFINED then
-    self.height = self.child.height + self.border_height
+  if self.height == Z.UNDEFINED then
+    self.height = self.child.height + Z.BORDER_HEIGHT
   end
 
   self:calculate_xy_from_where()
 end
 
 --[[
-ZForm.where can be:
+Z.Form.where can be:
   16 1       2       3 4
     .-----------------.
   15| EmuHawk     _[]X|5
@@ -257,16 +272,16 @@ ZForm.where can be:
   16 - corner-top-left or corner-left-top
 --]]
 
-function ZForm:calculate_xy_from_where()
-  if self.where == UNDEFINED then
+function Z.Form:calculate_xy_from_where()
+  if self.where == Z.UNDEFINED then
     return
   end
 
   -- Main EmuHawk window:
   local main_x = client.xpos()
   local main_y = client.ypos()
-  local main_width = client.screenwidth() + self.client_border_width
-  local main_height = client.screenheight() + self.client_border_height
+  local main_width = client.screenwidth() + Z.CLIENT_BORDER_WIDTH
+  local main_height = client.screenheight() + Z.CLIENT_BORDER_HEIGHT
 
   local w = self.where
 
@@ -321,36 +336,36 @@ function ZForm:calculate_xy_from_where()
   end
 end
 
-function ZForm:build()
+function Z.Form:build()
   -- build() for the Form does not receive any parameters.
   self.handle = forms.newform(self.width, self.height, self.title)
-  if self.x ~= UNDEFINED and self.y ~= UNDEFINED then
+  if self.x ~= Z.UNDEFINED and self.y ~= Z.UNDEFINED then
     forms.setlocation(self.handle, self.x, self.y)
   end
   self.child:build(self.handle)
 end
 
 ---------------------------------------------------------------------------
--- ZStacking object.
+-- Z.Stacking object.
 
-ZStacking = NewClass()
+Z.Stacking = Z.NewClass()
 
-function ZStacking:new(init)
-  local instance = ObjectConstructor(
+function Z.Stacking:new(init)
+  local instance = Z.ObjectConstructor(
     self,
-    table_join(COMMON_COORD_ATTRIBUTES, {
+    Z.table_join(Z.COMMON_COORD_ATTRIBUTES, {
       type = "stacking",
       children_base_height = 24,
       children = {},
     }),
     init)
 
-  instance.children = construct_children(instance.children)
+  instance.children = Z.construct_children(instance.children)
   return instance
 end
 
-function ZStacking:update_coords(x, y, available_width, available_height)
-  local children_width = UNDEFINED
+function Z.Stacking:update_coords(x, y, available_width, available_height)
+  local children_width = Z.UNDEFINED
   self.height = 0  -- Will be the sum of children heights.
 
   self.x = x
@@ -361,14 +376,14 @@ function ZStacking:update_coords(x, y, available_width, available_height)
   for i,c in ipairs(self.children) do
     c:update_coords(child_x, child_y, available_width, self.children_base_height)
 
-    if child_y ~= UNDEFINED then
+    if child_y ~= Z.UNDEFINED then
       child_y = child_y + c.height
     end
 
     self.height = self.height + c.height
 
-    if c.width ~= UNDEFINED then
-      if children_width == UNDEFINED then
+    if c.width ~= Z.UNDEFINED then
+      if children_width == Z.UNDEFINED then
         children_width = c.width
       else
         children_width = math.max(children_width, c.width)
@@ -379,46 +394,47 @@ function ZStacking:update_coords(x, y, available_width, available_height)
   self.width = children_width
 end
 
-function ZStacking:build(form_handle)
+function Z.Stacking:build(form_handle)
   for i,c in ipairs(self.children) do
     c:build(form_handle)
   end
 end
 
 ---------------------------------------------------------------------------
--- ZCheckbox object.
+-- Z.Checkbox object.
 
-ZCheckbox = NewClass()
+Z.Checkbox = Z.NewClass()
 
-function ZCheckbox:new(init)
-  local instance = ObjectConstructor(
+function Z.Checkbox:new(init)
+  local instance = Z.ObjectConstructor(
     self,
-    table_join(COMMON_WIDGET_ATTRIBUTES, {
+    Z.table_join(Z.COMMON_WIDGET_ATTRIBUTES, {
       type = "checkbox",
       label = "",
+      align = Z.UNDEFINED,
     }),
     init)
   return instance
 end
 
-function ZCheckbox:build(form_handle)
+function Z.Checkbox:build(form_handle)
   self.handle = forms.checkbox(form_handle, self.label, self.x, self.y)
   forms.setsize(self.handle, self.width, self.height)
-  if self.onclick ~= UNDEFINED then
-    forms.addclick(self.handle, click_handler_wrapper(self.onclick))
+  if self.onclick ~= Z.UNDEFINED then
+    forms.addclick(self.handle, Z.click_handler_wrapper(self.onclick))
   end
   self:_set_text_align()
 end
 
 ---------------------------------------------------------------------------
--- ZButton object.
+-- Z.Button object.
 
-ZButton = NewClass()
+Z.Button = Z.NewClass()
 
-function ZButton:new(init)
-  local instance = ObjectConstructor(
+function Z.Button:new(init)
+  local instance = Z.ObjectConstructor(
     self,
-    table_join(COMMON_WIDGET_ATTRIBUTES, {
+    Z.table_join(Z.COMMON_WIDGET_ATTRIBUTES, {
       type = "button",
       label = "",
     }),
@@ -426,64 +442,66 @@ function ZButton:new(init)
   return instance
 end
 
-function ZButton:build(form_handle)
+function Z.Button:build(form_handle)
   self.handle = forms.button(form_handle, self.label,
-    click_handler_wrapper(self.onclick), self.x, self.y, self.width, self.height)
+    Z.click_handler_wrapper(self.onclick), self.x, self.y, self.width, self.height)
 end
 
 ---------------------------------------------------------------------------
--- ZLabel object.
+-- Z.Label object.
 
-ZLabel = NewClass()
+Z.Label = Z.NewClass()
 
-function ZLabel:new(init)
-  local instance = ObjectConstructor(
+function Z.Label:new(init)
+  local instance = Z.ObjectConstructor(
     self,
-    table_join(COMMON_WIDGET_ATTRIBUTES, {
+    Z.table_join(Z.COMMON_WIDGET_ATTRIBUTES, {
       type = "label",
       label = "",
       fixedWidth = false,
-      align = UNDEFINED,
+      align = Z.UNDEFINED,
     }),
     init)
   return instance
 end
 
-function ZLabel:build(form_handle)
+function Z.Label:build(form_handle)
   self.handle = forms.label(form_handle, self.label, self.x, self.y,
     self.width, self.height, self.fixedWidth)
-  if self.onclick ~= UNDEFINED then
-    forms.addclick(self.handle, click_handler_wrapper(self.onclick))
+  if self.onclick ~= Z.UNDEFINED then
+    forms.addclick(self.handle, Z.click_handler_wrapper(self.onclick))
   end
   self:_set_text_align()
 end
 
 ---------------------------------------------------------------------------
--- ZSpacer object.
+-- Z.Spacer object.
 
-ZSpacer = NewClass()
+Z.Spacer = Z.NewClass()
 
-function ZSpacer:new(init)
-  local instance = ObjectConstructor(
+function Z.Spacer:new(init)
+  local instance = Z.ObjectConstructor(
     self,
-    table_join(COMMON_WIDGET_ATTRIBUTES, {
+    Z.table_join(Z.COMMON_WIDGET_ATTRIBUTES, {
       type = "spacer",
     }),
     init)
   return instance
 end
 
-function ZSpacer:build(form_handle)
+function Z.Spacer:build(form_handle)
 end
 
 ---------------------------------------------------------------------------
 -- Mapping each "type" to their class.
 
-form_classes = {
-  form = ZForm,
-  stacking = ZStacking,
-  checkbox = ZCheckbox,
-  button = ZButton,
-  label = ZLabel,
-  spacer = ZSpacer,
+Z.form_classes = {
+  form = Z.Form,
+  stacking = Z.Stacking,
+  checkbox = Z.Checkbox,
+  button = Z.Button,
+  label = Z.Label,
+  spacer = Z.Spacer,
 }
+
+return Z

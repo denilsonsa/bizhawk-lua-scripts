@@ -1,9 +1,14 @@
+-- Force reloading this module.
+package.loaded["ZForms"] = nil
+
 Z = require("ZForms")
 
 zform_demo_index_is_loaded = true
 
 
 function run_external_demo(name)
+  -- If the module had been loaded before, let's force a reload.
+  package.loaded[name] = nil
   local demo = require(name)
   demo.run_demo()
 end
@@ -49,14 +54,14 @@ form_description = {
   },
 }
 
-ff = Z.ZForm(form_description)
+ff = Z.Form(form_description)
 ff:update_coords()
 ff:build()
 
 
 while true do
   -- You must call this function on your main loop.
-  Z.zform_run_event_handlers()
+  Z.form_run_event_handlers()
 
   emu.frameadvance()
 end
