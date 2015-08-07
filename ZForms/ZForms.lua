@@ -1,4 +1,4 @@
--- Z.Forms
+-- ZForms
 --
 -- An easy-to-use UI building library.
 -- Works as a wrapper around BizHawk "forms" module.
@@ -40,47 +40,123 @@ end
 ---------------------------------------------------------------------------
 -- Generic functions for working with objects.
 
-function Z.NewClass()
-  -- This function encapsulates the boilerplate required to declare a new class.
-  -- http://lua-users.org/wiki/ObjectOrientationTutorial
-  -- http://www.lua.org/pil/16.1.html
-
-  local t = {}
-  t.__index = t
-  setmetatable(t, {
-    __call = function(cls, ...)
-      return cls:new(...)
-    end,
-  })
-  return t
-end
-
-function Z.ObjectConstructor(cls, default_attributes, init_values)
-  -- This function has the code for creating a new object of a class.
+function Z.ClassCallMethod(cls, ...)
+  -- This function calls the class new() method, followed by the class init()
+  -- method.
   --
-  -- cls                = The object class.
-  -- default_attributes = Default values for attributes that can be initialized.
-  -- init_values        = Initialization values for attributes.
+  -- It allows using a simpler syntax:
+  --   instance = ClassName()
 
-  -- Making a copy of default_attributes.
-  local instance = Z.table_join(default_attributes)
-
-  -- Updating attributes with values from initialization.
-  if init_values ~= nil then
-    for key, value in pairs(instance) do
-      if init_values[key] ~= nil then
-        instance[key] = init_values[key]
-      end
-    end
+  local instance = cls:new()
+  if cls.init ~= nil then
+    instance:init(...)
   end
-
-  setmetatable(instance, cls)
-
   return instance
 end
 
+function Z.ClassNewMethod(cls)
+  -- Similar to Python, new() creates a new instance of this class, while
+  -- init() initializes the instance values.
+
+  local instance = setmetatable({}, cls)
+  return instance
+end
+
+function Z.NewClass(...)
+  -- This function encapsulates the boilerplate required to declare a new class.
+  -- http://lua-users.org/wiki/ObjectOrientationTutorial
+  -- http://www.lua.org/pil/16.1.html
+  --
+  -- Usage:
+  --   BaseClass = Z.NewClass()
+  --   DerivedClass = Z.NewClass(BaseClass)
+
+  -- Copying the tables of the base classes into the new class.
+  local cls = Z.table_join(...)
+
+  -- Failed lookups on the instances will look at the class table.
+  cls.__index = cls
+
+  -- The constructor method.
+  cls.new = Z.ClassNewMethod
+
+  -- Some magic...
+  setmetatable(cls, {
+    __call = Z.ClassCallMethod,
+  })
+
+  return cls
+end
+
+function Z.SetInitialInstanceAttributes(self, default_attributes, initial_values)
+  -- Sets the instance attributes based on the default attributes and the
+  -- initial passed upon instantiating the object.
+
+  for key, value in pairs(default_attributes) do
+    self[key] = value
+    if initial_values ~= nil and initial_values[key] ~= nil then
+      self[key] = initial_values[key]
+    end
+  end
+end
+
 ---------------------------------------------------------------------------
--- Basic Z.Forms code.
+-- jQuery-inspired properties.
+
+function Z.NewProperty(type, prop)
+  -- This function returns a function that behaves like jQuery properties.
+  -- Calling the function with a value will set the value.
+  -- Either way, returns the value from the underlying .Net object.
+  --
+  -- Examples:
+  --   is_checked = some_checkbox:Checked()
+  --   is_checked = some_checkbox:Checked(False)
+  --   some_checkbox:Checked(False)
+
+  local conversion_func
+  if type == "string" then
+    conversion_func = Z.PropertyConvertToString
+  elseif type == "number" then
+    conversion_func = tonumber
+  elseif type == "int" then
+    conversion_func = Z.PropertyConvertToInt
+  elseif type == "boolean" then
+    conversion_func = Z.PropertyConvertToBoolean
+  else
+    error("Invalid property type: " .. tostring(type))
+  end
+
+  return function(self, value)
+    if value ~= nil then
+      self:set(prop, value)
+    end
+    return conversion_func(self:get(prop))
+  end
+end
+
+function Z.PropertyConvertToString(value)
+  -- forms.getproperty() will always return a string.
+  return value
+end
+
+function Z.PropertyConvertToInt(value)
+  return math.floor(tonumber(value))
+end
+
+function Z.PropertyConvertToBoolean(value)
+  value = string.lower(value)
+  if value == "true" or value == "1" then
+    return true
+  elseif value == "false" or value == "0" then
+    return false
+  else
+    print("Invalid boolean string: " .. value)
+    return nil
+  end
+end
+
+---------------------------------------------------------------------------
+-- Basic ZForms code.
 
 Z.COMMON_COORD_ATTRIBUTES = {
   x = Z.UNDEFINED,
@@ -92,27 +168,6 @@ Z.COMMON_WIDGET_ATTRIBUTES = Z.table_join(Z.COMMON_COORD_ATTRIBUTES, {
   id = Z.UNDEFINED,  -- TODO: use id for something
   onclick = Z.UNDEFINED,  -- onclick is only supported on Button, Checkbox.
   handle = Z.UNDEFINED,  -- Numeric id used by BizHawk.
-  update_coords = function(self, x, y, available_width, available_height)
-    -- Default behavior is to expand to all available space.
-    -- However, if width/height had been previously defined, those values will be preserved.
-    -- x/y coordinates will always be modified.
-    self.x = x
-    self.y = y
-    if self.width == Z.UNDEFINED then
-      self.width = available_width
-    end
-    if self.height == Z.UNDEFINED then
-      self.height = available_height
-    end
-  end,
-  _set_text_align = function(self)
-    if self.align ~= Z.UNDEFINED then
-      local value = Z.CONTENT_ALIGNMENT[string.lower(self.align)]
-      if value ~= nil then
-        forms.setproperty(self.handle, 'TextAlign', value)
-      end
-    end
-  end,
 })
 
 -- Based on .Net System.Drawing.ContentAlignment, used by Z.Checkbox and Z.Label.
@@ -138,6 +193,7 @@ Z.CONTENT_ALIGNMENT = {
 }
 
 -- Constants (that may, someday, be auto-calculated).
+-- TODO: auto-detect it using Z.Form property "ClientSize" (which returns "{Width=192, Height=257}")
 Z.BORDER_WIDTH = 8  -- The form window bevel.
 Z.BORDER_HEIGHT = 28  -- The form window bevel.
 Z.CLIENT_BORDER_WIDTH = 8  -- The bevel of the main window.
@@ -147,7 +203,7 @@ function Z.construct_children(children)
   local new_children = {}
   for i,t in ipairs(children) do
     if t ~= nil and t ~= Z.UNDEFINED then
-      local obj = Z.form_classes[t.type]:new(t)
+      local obj = Z.TYPE_STRING_TO_CLASS[t.type](t)
       new_children[i] = obj
     end
   end
@@ -155,7 +211,53 @@ function Z.construct_children(children)
 end
 
 ---------------------------------------------------------------------------
--- Z.Forms event handling functions.
+-- Base classes containing some common methods.
+
+Z.BaseClass = Z.NewClass()
+
+function Z.BaseClass.update_coords(self, x, y, available_width, available_height)
+  -- Default behavior is to expand to all available space.
+  -- However, if width/height had been previously defined, those values will be preserved.
+  -- x/y coordinates will always be modified.
+  self.x = x
+  self.y = y
+  if self.width == Z.UNDEFINED then
+    self.width = available_width
+  end
+  if self.height == Z.UNDEFINED then
+    self.height = available_height
+  end
+end
+
+Z.BaseWidgetClass = Z.NewClass(Z.BaseClass)
+
+function Z.BaseWidgetClass.get(self, prop)
+  return forms.getproperty(self.handle, prop)
+end
+
+function Z.BaseWidgetClass.set(self, prop, value)
+  forms.setproperty(self.handle, prop, value)
+end
+
+function Z.BaseWidgetClass.setlocation(self)
+  forms.setlocation(self.handle, self.x, self.y)
+end
+
+function Z.BaseWidgetClass.setsize(self)
+  forms.setsize(self.handle, self.width, self.height)
+end
+
+function Z.BaseWidgetClass._set_text_align(self)
+  if self.align ~= Z.UNDEFINED then
+    local value = Z.CONTENT_ALIGNMENT[string.lower(self.align)]
+    if value ~= nil then
+      forms.setproperty(self.handle, 'TextAlign', value)
+    end
+  end
+end
+
+---------------------------------------------------------------------------
+-- ZForms event handling functions.
 
 -- Populated by Z.click_handler_wrapper(), consumed by Z.form_run_event_handlers().
 Z.form_event_handlers_to_be_run = {}
@@ -184,26 +286,33 @@ end
 ---------------------------------------------------------------------------
 -- Z.Form object.
 
-Z.Form = Z.NewClass()
+Z.Form = Z.NewClass(Z.BaseWidgetClass)
+Z.Form.type = "form"
 
-function Z.Form:new(init)
-  local instance = Z.ObjectConstructor(
+Z.Form.Left   = Z.NewProperty("int", "Left")
+Z.Form.Right  = Z.NewProperty("int", "Right")
+Z.Form.Top    = Z.NewProperty("int", "Top")
+Z.Form.Bottom = Z.NewProperty("int", "Bottom")
+Z.Form.Width  = Z.NewProperty("int", "Width")
+Z.Form.Height = Z.NewProperty("int", "Height")
+
+Z.Form.Title   = Z.NewProperty("string", "Text")
+Z.Form.Text    = Z.NewProperty("string", "Text")
+
+function Z.Form:init(initial_values)
+  Z.SetInitialInstanceAttributes(
     self,
-    Z.table_join(Z.COMMON_COORD_ATTRIBUTES, {
-      type = "form",
+    Z.table_join(Z.COMMON_WIDGET_ATTRIBUTES, {
       title = "Lua script window",
       where = Z.UNDEFINED,
       default_width = 128,
       default_height = 128,
-      handle = Z.UNDEFINED,
       child = Z.UNDEFINED,
     }),
-    init)
+    initial_values)
 
-  local children = Z.construct_children({[1] = instance.child})
-  instance.child = children[1]
-
-  return instance
+  local children = Z.construct_children({[1] = self.child})
+  self.child = children[1]
 end
 
 function Z.Form:update_coords()
@@ -340,7 +449,7 @@ function Z.Form:build()
   -- build() for the Form does not receive any parameters.
   self.handle = forms.newform(self.width, self.height, self.title)
   if self.x ~= Z.UNDEFINED and self.y ~= Z.UNDEFINED then
-    forms.setlocation(self.handle, self.x, self.y)
+    self:setlocation()
   end
   self.child:build(self.handle)
 end
@@ -348,20 +457,19 @@ end
 ---------------------------------------------------------------------------
 -- Z.Stacking object.
 
-Z.Stacking = Z.NewClass()
+Z.Stacking = Z.NewClass(Z.BaseClass)
+Z.Stacking.type = "stacking"
 
-function Z.Stacking:new(init)
-  local instance = Z.ObjectConstructor(
+function Z.Stacking:init(initial_values)
+  Z.SetInitialInstanceAttributes(
     self,
     Z.table_join(Z.COMMON_COORD_ATTRIBUTES, {
-      type = "stacking",
       children_base_height = 24,
       children = {},
     }),
-    init)
+    initial_values)
 
-  instance.children = Z.construct_children(instance.children)
-  return instance
+  self.children = Z.construct_children(self.children)
 end
 
 function Z.Stacking:update_coords(x, y, available_width, available_height)
@@ -403,23 +511,22 @@ end
 ---------------------------------------------------------------------------
 -- Z.Checkbox object.
 
-Z.Checkbox = Z.NewClass()
+Z.Checkbox = Z.NewClass(Z.BaseWidgetClass)
+Z.Checkbox.type = "checkbox"
 
-function Z.Checkbox:new(init)
-  local instance = Z.ObjectConstructor(
+function Z.Checkbox:init(initial_values)
+  Z.SetInitialInstanceAttributes(
     self,
     Z.table_join(Z.COMMON_WIDGET_ATTRIBUTES, {
-      type = "checkbox",
       label = "",
       align = Z.UNDEFINED,
     }),
-    init)
-  return instance
+    initial_values)
 end
 
 function Z.Checkbox:build(form_handle)
   self.handle = forms.checkbox(form_handle, self.label, self.x, self.y)
-  forms.setsize(self.handle, self.width, self.height)
+  self:setsize()
   if self.onclick ~= Z.UNDEFINED then
     forms.addclick(self.handle, Z.click_handler_wrapper(self.onclick))
   end
@@ -429,17 +536,16 @@ end
 ---------------------------------------------------------------------------
 -- Z.Button object.
 
-Z.Button = Z.NewClass()
+Z.Button = Z.NewClass(Z.BaseWidgetClass)
+Z.Button.type = "button"
 
-function Z.Button:new(init)
-  local instance = Z.ObjectConstructor(
+function Z.Button:init(initial_values)
+  Z.SetInitialInstanceAttributes(
     self,
     Z.table_join(Z.COMMON_WIDGET_ATTRIBUTES, {
-      type = "button",
       label = "",
     }),
-    init)
-  return instance
+    initial_values)
 end
 
 function Z.Button:build(form_handle)
@@ -450,19 +556,18 @@ end
 ---------------------------------------------------------------------------
 -- Z.Label object.
 
-Z.Label = Z.NewClass()
+Z.Label = Z.NewClass(Z.BaseWidgetClass)
+Z.Label.type = "label"
 
-function Z.Label:new(init)
-  local instance = Z.ObjectConstructor(
+function Z.Label:init(initial_values)
+  Z.SetInitialInstanceAttributes(
     self,
     Z.table_join(Z.COMMON_WIDGET_ATTRIBUTES, {
-      type = "label",
       label = "",
       fixedWidth = false,
       align = Z.UNDEFINED,
     }),
-    init)
-  return instance
+    initial_values)
 end
 
 function Z.Label:build(form_handle)
@@ -477,16 +582,15 @@ end
 ---------------------------------------------------------------------------
 -- Z.Spacer object.
 
-Z.Spacer = Z.NewClass()
+Z.Spacer = Z.NewClass(Z.BaseClass)
+Z.Spacer.type = "spacer"
 
-function Z.Spacer:new(init)
-  local instance = Z.ObjectConstructor(
+function Z.Spacer:init(initial_values)
+  Z.SetInitialInstanceAttributes(
     self,
     Z.table_join(Z.COMMON_WIDGET_ATTRIBUTES, {
-      type = "spacer",
     }),
-    init)
-  return instance
+    initial_values)
 end
 
 function Z.Spacer:build(form_handle)
@@ -495,13 +599,18 @@ end
 ---------------------------------------------------------------------------
 -- Mapping each "type" to their class.
 
-Z.form_classes = {
-  form = Z.Form,
-  stacking = Z.Stacking,
-  checkbox = Z.Checkbox,
-  button = Z.Button,
-  label = Z.Label,
-  spacer = Z.Spacer,
-}
+Z.TYPE_STRING_TO_CLASS = {}
+for _,cls in ipairs({
+  Z.Form,
+  Z.Stacking,
+  Z.Checkbox,
+  Z.Button,
+  Z.Label,
+  Z.Spacer,
+}) do
+  Z.TYPE_STRING_TO_CLASS[cls.type] = cls
+end
 
+
+-- Returning this module.
 return Z

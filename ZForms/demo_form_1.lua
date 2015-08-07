@@ -18,7 +18,7 @@ local function run_demo()
   -- multiple widgets in the same window, you can use a layout widget to hold
   -- several children, and also to position them correctly.
 
-  -- Using Z.Stacking to put several widgets in the same form window. 
+  -- Using Z.Stacking to put several widgets in the same form window.
   local better_form = Z.Form({
     type = "form",
     title = "Custom title!",
@@ -31,6 +31,7 @@ local function run_demo()
         {type = "button", label = "Or buttons!"},
         {type = "label", label = "Or spacers!"},
         {type = "spacer"},
+        {type = "label", label = "Observe that Z.Stacking automatically calculates the height to fit all widgets.", height = 64},
         {type = "label", label = "Note: These widgets have no behavior in this demo.", height = 32},
       }
     }
@@ -40,7 +41,7 @@ local function run_demo()
 end
 
 
-if zform_demo_index_is_loaded == true then
+if zform_demo_index_is_loaded then
   return {
     run_demo = run_demo,
   }

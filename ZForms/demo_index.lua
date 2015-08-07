@@ -48,7 +48,7 @@ form_description = {
           ff.where = 1
         end
         ff:calculate_xy_from_where()
-        forms.setlocation(ff.handle, ff.x, ff.y)
+        ff:setlocation()
       end},
     },
   },
