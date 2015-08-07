@@ -1,13 +1,11 @@
--- Generic useful functions
+-- ZForms
+--
+-- An easy-to-use UI building library.
+-- Works as a wrapper around BizHawk "forms" module.
 
---pretty = require('pl.pretty')
 
-function p(...)
-  -- Alternative to print() that actually works.
-  for _,v in ipairs(arg) do
-    print(tostring(v))
-  end
-end
+---------------------------------------------------------------------------
+-- General-purpose stuff (i.e. "utils").
 
 -- Useful single value for the concept of "not initialized".
 -- Useful to mark table keys that exist but have no value yet.
@@ -17,8 +15,8 @@ UNDEFINED = setmetatable({}, {
 })
 
 function table_join(...)
-  -- Receives an arbitrary number of tables as arguments and join them
-  -- into a new table. Returns this new table.
+  -- Receives an arbitrary number of tables as arguments and join them into a
+  -- new table. Returns this new table.
 
   local ret = {}
   for _,t in ipairs(arg) do
@@ -75,7 +73,7 @@ function ObjectConstructor(cls, default_attributes, init_values)
 end
 
 ---------------------------------------------------------------------------
--- Generic form-related code
+-- Basic ZForms code.
 
 COMMON_COORD_ATTRIBUTES = {
   x = UNDEFINED,
@@ -100,32 +98,37 @@ COMMON_WIDGET_ATTRIBUTES = table_join(COMMON_COORD_ATTRIBUTES, {
       self.height = available_height
     end
   end,
+  _set_text_align = function(self)
+    if self.align ~= UNDEFINED then
+      local value = CONTENT_ALIGNMENT[string.lower(self.align)]
+      if value ~= nil then
+        forms.setproperty(self.handle, 'TextAlign', value)
+      end
+    end
+  end,
 })
 
--- Populated by click_handler_wrapper(), consumed by form_run_event_handlers().
-form_event_handlers_to_be_run = {}
-
--- This function should be added to the main loop!
-function form_run_event_handlers()
-  local funcs = form_event_handlers_to_be_run
-  form_event_handlers_to_be_run = {}
-
-  for i,v in ipairs(funcs) do
-    funcs[i]()
-  end
-end
-
--- Some bizhawk functions cannot be executed from within the GUI thread,
--- which is the case for click handlers.
--- This function is a wrapper to work around this issue.
-function click_handler_wrapper(func)
-  return function()
-    if func and func ~= UNDEFINED then
-      form_event_handlers_to_be_run[#form_event_handlers_to_be_run + 1] = func
-    end
-    --pretty.dump(form_event_handlers_to_be_run)
-  end
-end
+-- Based on .Net System.Drawing.ContentAlignment, used by ZCheckbox and ZLabel.
+CONTENT_ALIGNMENT = {
+  topleft = 1,
+  topcenter = 2,
+  topright = 4,
+  middleleft = 16,
+  middlecenter = 32,
+  middleright = 64,
+  bottomleft = 256,
+  bottomcenter = 512,
+  bottomright = 1024,
+  ["top-left"] = 1,
+  ["top-center"] = 2,
+  ["top-right"] = 4,
+  ["middle-left"] = 16,
+  ["middle-center"] = 32,
+  ["middle-right"] = 64,
+  ["bottom-left"] = 256,
+  ["bottom-center"] = 512,
+  ["bottom-right"] = 1024,
+}
 
 function construct_children(children)
   local new_children = {}
@@ -137,11 +140,39 @@ function construct_children(children)
 end
 
 ---------------------------------------------------------------------------
--- Defining some new objects
+-- ZForms event handling functions.
 
-FormForm = NewClass()
+-- Populated by click_handler_wrapper(), consumed by zform_run_event_handlers().
+form_event_handlers_to_be_run = {}
 
-function FormForm:new(init)
+-- This function should be added to the main loop!
+function zform_run_event_handlers()
+  local funcs = form_event_handlers_to_be_run
+  form_event_handlers_to_be_run = {}
+
+  for i,v in ipairs(funcs) do
+    funcs[i]()
+  end
+end
+
+-- Some BizHawk functions cannot be executed from within the GUI thread,
+-- which is the case for click handlers.
+-- This function is a wrapper to work around this issue.
+function click_handler_wrapper(func)
+  return function()
+    if func and func ~= UNDEFINED then
+      form_event_handlers_to_be_run[#form_event_handlers_to_be_run + 1] = func
+    end
+    --pretty.dump(form_event_handlers_to_be_run)
+  end
+end
+
+---------------------------------------------------------------------------
+-- ZForm object.
+
+ZForm = NewClass()
+
+function ZForm:new(init)
   local instance = ObjectConstructor(
     self,
     table_join(COMMON_COORD_ATTRIBUTES, {
@@ -165,7 +196,7 @@ function FormForm:new(init)
   return instance
 end
 
-function FormForm:update_coords()
+function ZForm:update_coords()
   -- update_coords() for the Form does not receive any parameters.
 
   -- First execute the method with UNDEFINED values, to calculate and propagate
@@ -197,7 +228,7 @@ function FormForm:update_coords()
 end
 
 --[[
-FormForm.where can be:
+ZForm.where can be:
   16 1       2       3 4
     .-----------------.
   15| EmuHawk     _[]X|5
@@ -226,7 +257,7 @@ FormForm.where can be:
   16 - corner-top-left or corner-left-top
 --]]
 
-function FormForm:calculate_xy_from_where()
+function ZForm:calculate_xy_from_where()
   if self.where == UNDEFINED then
     return
   end
@@ -290,7 +321,7 @@ function FormForm:calculate_xy_from_where()
   end
 end
 
-function FormForm:build()
+function ZForm:build()
   -- build() for the Form does not receive any parameters.
   self.handle = forms.newform(self.width, self.height, self.title)
   if self.x ~= UNDEFINED and self.y ~= UNDEFINED then
@@ -299,10 +330,12 @@ function FormForm:build()
   self.child:build(self.handle)
 end
 
+---------------------------------------------------------------------------
+-- ZStacking object.
 
-FormStacking = NewClass()
+ZStacking = NewClass()
 
-function FormStacking:new(init)
+function ZStacking:new(init)
   local instance = ObjectConstructor(
     self,
     table_join(COMMON_COORD_ATTRIBUTES, {
@@ -316,7 +349,7 @@ function FormStacking:new(init)
   return instance
 end
 
-function FormStacking:update_coords(x, y, available_width, available_height)
+function ZStacking:update_coords(x, y, available_width, available_height)
   local children_width = UNDEFINED
   self.height = 0  -- Will be the sum of children heights.
 
@@ -346,16 +379,18 @@ function FormStacking:update_coords(x, y, available_width, available_height)
   self.width = children_width
 end
 
-function FormStacking:build(form_handle)
+function ZStacking:build(form_handle)
   for i,c in ipairs(self.children) do
     c:build(form_handle)
   end
 end
 
+---------------------------------------------------------------------------
+-- ZCheckbox object.
 
-FormCheckbox = NewClass()
+ZCheckbox = NewClass()
 
-function FormCheckbox:new(init)
+function ZCheckbox:new(init)
   local instance = ObjectConstructor(
     self,
     table_join(COMMON_WIDGET_ATTRIBUTES, {
@@ -366,18 +401,21 @@ function FormCheckbox:new(init)
   return instance
 end
 
-function FormCheckbox:build(form_handle)
+function ZCheckbox:build(form_handle)
   self.handle = forms.checkbox(form_handle, self.label, self.x, self.y)
   forms.setsize(self.handle, self.width, self.height)
   if self.onclick ~= UNDEFINED then
     forms.addclick(self.handle, click_handler_wrapper(self.onclick))
   end
+  self:_set_text_align()
 end
 
+---------------------------------------------------------------------------
+-- ZButton object.
 
-FormButton = NewClass()
+ZButton = NewClass()
 
-function FormButton:new(init)
+function ZButton:new(init)
   local instance = ObjectConstructor(
     self,
     table_join(COMMON_WIDGET_ATTRIBUTES, {
@@ -388,38 +426,44 @@ function FormButton:new(init)
   return instance
 end
 
-function FormButton:build(form_handle)
+function ZButton:build(form_handle)
   self.handle = forms.button(form_handle, self.label,
     click_handler_wrapper(self.onclick), self.x, self.y, self.width, self.height)
 end
 
+---------------------------------------------------------------------------
+-- ZLabel object.
 
-FormLabel = NewClass()
+ZLabel = NewClass()
 
-function FormLabel:new(init)
+function ZLabel:new(init)
   local instance = ObjectConstructor(
     self,
     table_join(COMMON_WIDGET_ATTRIBUTES, {
       type = "label",
       label = "",
       fixedWidth = false,
+      align = UNDEFINED,
     }),
     init)
   return instance
 end
 
-function FormLabel:build(form_handle)
+function ZLabel:build(form_handle)
   self.handle = forms.label(form_handle, self.label, self.x, self.y,
     self.width, self.height, self.fixedWidth)
   if self.onclick ~= UNDEFINED then
     forms.addclick(self.handle, click_handler_wrapper(self.onclick))
   end
+  self:_set_text_align()
 end
 
+---------------------------------------------------------------------------
+-- ZSpacer object.
 
-FormSpacer = NewClass()
+ZSpacer = NewClass()
 
-function FormSpacer:new(init)
+function ZSpacer:new(init)
   local instance = ObjectConstructor(
     self,
     table_join(COMMON_WIDGET_ATTRIBUTES, {
@@ -429,77 +473,17 @@ function FormSpacer:new(init)
   return instance
 end
 
-function FormSpacer:build(form_handle)
+function ZSpacer:build(form_handle)
 end
-
-
-form_classes = {
-  form = FormForm,
-  stacking = FormStacking,
-  checkbox = FormCheckbox,
-  button = FormButton,
-  label = FormLabel,
-  spacer = FormSpacer,
-}
 
 ---------------------------------------------------------------------------
+-- Mapping each "type" to their class.
 
-function build_form(description)
-
-end
-
-function advance100()
-  gui.addmessage("begin")
-  client.speedmode(400)
-  for i=1,200,1 do
-    emu.frameadvance()
-  end
-  client.speedmode(100)
-  gui.addmessage("end")
-end
-
-form_description = {
-  type = "form",
-  width = 200,
-  where = 1,
-  child = {
-    type = "stacking",
-    --children_base_height = 32,  -- Default height for children, can be overriden
-    children = {
-      -- optional: height
-      --[[{type = "checkbox", id = "HIDE_HUD", label = "Hide HUD"},
-      {type = "checkbox", id = "SPRITES_ON_TOP", label = "Sprites on-top", checked = true},
-      {type = "checkbox", id = "HIDE_SPRITES", label = "Hide sprites", onclick=advance100},
-      {type = "spacer", height = 8},
-      {type = "checkbox", id = "SCREENSHOTS", label = "Save screenshots for stitching a level map"},
-      {type = "label", label = "Label 1"},
-      {type = "label", label = "Label 2", fixedWidth = true, onclick=advance100},
-      {type = "label", label = "Label 3", height = 32},
-      {type = "label", label = "Foo bar baz off", width = 16},
-      {type = "button", id = "BUTTON1", label = "Button 1", onclick=advance100},
-      {type = "button", id = "BUTTON2", label = "Button 2"},
-      {type = "spacer", height = 8},
-      {type = "button", id = "BUTTON3", label = "Button 3"},
-      {type = "button", id = "BUTTON4", label = "Button 4", height=32},
-      {type = "button", id = "BUTTON5", label = "Button 5", width=64},
-      --]]
-      {type = "button", id = "MOVE", label = "MOVE", onclick = function()
-        ff.where = ff.where + 1
-        if ff.where > 16 then
-          ff.where = 1
-        end
-        ff:calculate_xy_from_where()
-        forms.setlocation(ff.handle, ff.x, ff.y)
-      end},
-    },
-  },
+form_classes = {
+  form = ZForm,
+  stacking = ZStacking,
+  checkbox = ZCheckbox,
+  button = ZButton,
+  label = ZLabel,
+  spacer = ZSpacer,
 }
-
-ff = FormForm(form_description)
-ff:update_coords()
-ff:build()
-
-while true do
-  form_run_event_handlers()
-  emu.frameadvance()
-end
