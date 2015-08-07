@@ -24,7 +24,6 @@ local function start_demo()
   better_form = Z.Form({
     type = "form",
     title = "Custom title!",
-    width = 200,
     child = {
       type = "stacking",
       children = {
@@ -34,7 +33,7 @@ local function start_demo()
         {type = "label", label = "Or spacers!"},
         {type = "spacer"},
         {type = "label", label = "Observe that Z.Stacking automatically calculates the height to fit all widgets.", height = 64},
-        {type = "label", label = "Note: These widgets have no behavior in this demo.", height = 32},
+        {type = "label", label = "And the width to fit the largest widget.", width = 200},
       }
     }
   })

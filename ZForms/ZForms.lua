@@ -351,6 +351,14 @@ function Z.Form:update_coords()
   -- Calculate the suggested dimensions.
   local width = self.default_width
   local height = self.default_height
+
+  if self.child.width ~= Z.UNDEFINED then
+    width = self.child.width
+  end
+  if self.child.height ~= Z.UNDEFINED then
+    height = self.child.height
+  end
+
   if self.width ~= Z.UNDEFINED then
     width = self.width - Z.BORDER_WIDTH
   end
@@ -494,7 +502,7 @@ function Z.Stacking:init(initial_values)
 end
 
 function Z.Stacking:update_coords(x, y, available_width, available_height)
-  local children_width = Z.UNDEFINED
+  local children_width = Z.UNDEFINED  -- Will be the maximum children width.
   self.height = 0  -- Will be the sum of children heights.
 
   self.x = x
@@ -502,20 +510,20 @@ function Z.Stacking:update_coords(x, y, available_width, available_height)
   local child_x = x
   local child_y = y
 
-  for i,c in ipairs(self.children) do
-    c:update_coords(child_x, child_y, available_width, self.children_default_height)
+  for _,child in ipairs(self.children) do
+    child:update_coords(child_x, child_y, available_width, self.children_default_height)
 
     if child_y ~= Z.UNDEFINED then
-      child_y = child_y + c.height
+      child_y = child_y + child.height
     end
 
-    self.height = self.height + c.height
+    self.height = self.height + child.height
 
-    if c.width ~= Z.UNDEFINED then
+    if child.width ~= Z.UNDEFINED then
       if children_width == Z.UNDEFINED then
-        children_width = c.width
+        children_width = child.width
       else
-        children_width = math.max(children_width, c.width)
+        children_width = math.max(children_width, child.width)
       end
     end
   end
@@ -524,8 +532,8 @@ function Z.Stacking:update_coords(x, y, available_width, available_height)
 end
 
 function Z.Stacking:build(form_handle)
-  for i,c in ipairs(self.children) do
-    c:build(form_handle)
+  for _,child in ipairs(self.children) do
+    child:build(form_handle)
   end
 end
 
