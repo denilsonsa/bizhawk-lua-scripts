@@ -12,4 +12,4 @@ Also included are some *RAM watch* files, which contain RAM locations I've disco
 * https://github.com/stevedonovan/Penlight - Incredible collection of Lua libraries.
 * http://tasvideos.org/Bizhawk.html
 * http://tasvideos.org/Bizhawk/LuaFunctions.html
-* https://code.google.com/p/bizhawk/
+* https://github.com/TASVideos/BizHawk
