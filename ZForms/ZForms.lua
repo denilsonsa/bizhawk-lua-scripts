@@ -163,9 +163,10 @@ Z.COMMON_COORD_ATTRIBUTES = {
   y = Z.UNDEFINED,
   width = Z.UNDEFINED,
   height = Z.UNDEFINED,
+  data = Z.UNDEFINED,
+  id = Z.UNDEFINED,  -- TODO: use id for something
 }
 Z.COMMON_WIDGET_ATTRIBUTES = Z.table_join(Z.COMMON_COORD_ATTRIBUTES, {
-  id = Z.UNDEFINED,  -- TODO: use id for something
   onclick = Z.UNDEFINED,  -- onclick is only supported on Button, Checkbox.
   handle = Z.UNDEFINED,  -- Numeric id used by BizHawk.
 })
@@ -242,6 +243,13 @@ end
 
 Z.BaseWidgetClass = Z.NewClass(Z.BaseClass)
 
+Z.BaseWidgetClass.Left   = Z.NewProperty("int", "Left")
+Z.BaseWidgetClass.Right  = Z.NewProperty("int", "Right")
+Z.BaseWidgetClass.Top    = Z.NewProperty("int", "Top")
+Z.BaseWidgetClass.Bottom = Z.NewProperty("int", "Bottom")
+Z.BaseWidgetClass.Width  = Z.NewProperty("int", "Width")
+Z.BaseWidgetClass.Height = Z.NewProperty("int", "Height")
+
 function Z.BaseWidgetClass.get(self, prop)
   return forms.getproperty(self.handle, prop)
 end
@@ -262,7 +270,7 @@ function Z.BaseWidgetClass._set_text_align(self)
   if self.align ~= Z.UNDEFINED then
     local value = Z.CONTENT_ALIGNMENT[string.lower(self.align)]
     if value ~= nil then
-      forms.setproperty(self.handle, 'TextAlign', value)
+      forms.setproperty(self.handle, "TextAlign", value)
     end
   end
 end
@@ -278,18 +286,18 @@ function Z.form_run_event_handlers()
   local funcs = Z.form_event_handlers_to_be_run
   Z.form_event_handlers_to_be_run = {}
 
-  for i,v in ipairs(funcs) do
-    funcs[i]()
+  for _,item in ipairs(funcs) do
+    item.func(item.self)
   end
 end
 
 -- Some BizHawk functions cannot be executed from within the GUI thread,
 -- which is the case for click handlers.
 -- This function is a wrapper to work around this issue.
-function Z.click_handler_wrapper(func)
+function Z.click_handler_wrapper(instance, func)
   return function()
     if func and func ~= Z.UNDEFINED then
-      Z.form_event_handlers_to_be_run[#Z.form_event_handlers_to_be_run + 1] = func
+      Z.form_event_handlers_to_be_run[#Z.form_event_handlers_to_be_run + 1] = {func = func, self = instance}
     end
   end
 end
@@ -299,13 +307,6 @@ end
 
 Z.Form = Z.NewClass(Z.BaseWidgetClass)
 Z.Form.type = "form"
-
-Z.Form.Left   = Z.NewProperty("int", "Left")
-Z.Form.Right  = Z.NewProperty("int", "Right")
-Z.Form.Top    = Z.NewProperty("int", "Top")
-Z.Form.Bottom = Z.NewProperty("int", "Bottom")
-Z.Form.Width  = Z.NewProperty("int", "Width")
-Z.Form.Height = Z.NewProperty("int", "Height")
 
 Z.Form.TopMost = Z.NewProperty("boolean", "TopMost")
 Z.Form.Title   = Z.NewProperty("string", "Text")
@@ -387,12 +388,13 @@ Z.Form.where can be:
     .-----------------.
   15| EmuHawk     _[]X|5
     |                 |
-  14|                 |6
+  14|        0        |6
     |                 |
   13|                 |7
     '-----------------'
   12 11      10      9 8
 
+  0 - center
   1 - top-left
   2 - top-center
   3 - top-right
@@ -426,51 +428,53 @@ function Z.Form:calculate_xy_from_where()
 
   if false then
     -- Just to make all branches be elseif
-  elseif w == 15 or w == 'left-top'
-      or w == 14 or w == 'left-center'
-      or w == 13 or w == 'left-bottom'
-      or w == 16 or w == 'corner-top-left' or w == 'corner-left-top'
-      or w == 12 or w == 'corner-bottom-left' or w == 'corner-left-bottom' then
+  elseif w == 15 or w == "left-top"
+      or w == 14 or w == "left-center"
+      or w == 13 or w == "left-bottom"
+      or w == 16 or w == "corner-top-left" or w == "corner-left-top"
+      or w == 12 or w == "corner-bottom-left" or w == "corner-left-bottom" then
     self.x = main_x - self.width + 2
-  elseif w == 1 or w == 'top-left'
-      or w == 11 or w == 'bottom-left' then
+  elseif w == 1 or w == "top-left"
+      or w == 11 or w == "bottom-left" then
     self.x = main_x
-  elseif w == 2 or w == 'top-center'
-      or w == 10 or w == 'bottom-center' then
+  elseif w == 0 or w == "center"
+      or w == 2 or w == "top-center"
+      or w == 10 or w == "bottom-center" then
     self.x = main_x + (main_width - self.width + 2) / 2
-  elseif w == 3 or w == 'top-right'
-      or w == 9 or w == 'bottom-right' then
+  elseif w == 3 or w == "top-right"
+      or w == 9 or w == "bottom-right" then
     self.x = main_x + main_width - self.width + 2
-  elseif w == 5 or w == 'right-top'
-      or w == 6 or w == 'right-center'
-      or w == 7 or w == 'right-bottom'
-      or w == 4 or w == 'corner-top-right' or w == 'corner-right-top'
-      or w == 8 or w == 'corner-bottom-right' or w == 'corner-right-bottom' then
+  elseif w == 5 or w == "right-top"
+      or w == 6 or w == "right-center"
+      or w == 7 or w == "right-bottom"
+      or w == 4 or w == "corner-top-right" or w == "corner-right-top"
+      or w == 8 or w == "corner-bottom-right" or w == "corner-right-bottom" then
     self.x = main_x + main_width
   end
 
   if false then
     -- Just to make all branches be elseif
-  elseif w == 1 or w == 'top-left'
-      or w == 2 or w == 'top-center'
-      or w == 3 or w == 'top-right'
-      or w == 4 or w == 'corner-top-right' or w == 'corner-right-top'
-      or w == 16 or w == 'corner-top-left' or w == 'corner-left-top' then
+  elseif w == 1 or w == "top-left"
+      or w == 2 or w == "top-center"
+      or w == 3 or w == "top-right"
+      or w == 4 or w == "corner-top-right" or w == "corner-right-top"
+      or w == 16 or w == "corner-top-left" or w == "corner-left-top" then
     self.y = main_y - self.height + 2
-  elseif w == 5 or w == 'right-top'
-      or w == 15 or w == 'left-top' then
+  elseif w == 5 or w == "right-top"
+      or w == 15 or w == "left-top" then
     self.y = main_y
-  elseif w == 6 or w == 'right-center'
-      or w == 14 or w == 'left-center' then
+  elseif w == 0 or w == "center"
+      or w == 6 or w == "right-center"
+      or w == 14 or w == "left-center" then
     self.y = main_y + (main_height - self.height + 2) / 2
-  elseif w == 7 or w == 'right-bottom'
-      or w == 13 or w == 'left-bottom' then
+  elseif w == 7 or w == "right-bottom"
+      or w == 13 or w == "left-bottom" then
     self.y = main_y + main_height - self.height + 2
-  elseif w == 11 or w == 'bottom-left'
-      or w == 10 or w == 'bottom-center'
-      or w == 9 or w == 'bottom-right'
-      or w == 8 or w == 'corner-bottom-right' or w == 'corner-right-bottom'
-      or w == 12 or w == 'corner-bottom-left' or w == 'corner-left-bottom' then
+  elseif w == 11 or w == "bottom-left"
+      or w == 10 or w == "bottom-center"
+      or w == 9 or w == "bottom-right"
+      or w == 8 or w == "corner-bottom-right" or w == "corner-right-bottom"
+      or w == 12 or w == "corner-bottom-left" or w == "corner-left-bottom" then
     self.y = main_y + main_height
   end
 end
@@ -558,7 +562,7 @@ function Z.Checkbox:build(form_handle)
   self.handle = forms.checkbox(form_handle, self.label, self.x, self.y)
   self:setsize()
   if self.onclick ~= Z.UNDEFINED then
-    forms.addclick(self.handle, Z.click_handler_wrapper(self.onclick))
+    forms.addclick(self.handle, Z.click_handler_wrapper(self, self.onclick))
   end
   self:_set_text_align()
 end
@@ -580,7 +584,7 @@ end
 
 function Z.Button:build(form_handle)
   self.handle = forms.button(form_handle, self.label,
-    Z.click_handler_wrapper(self.onclick), self.x, self.y, self.width, self.height)
+    Z.click_handler_wrapper(self, self.onclick), self.x, self.y, self.width, self.height)
 end
 
 ---------------------------------------------------------------------------
@@ -604,7 +608,7 @@ function Z.Label:build(form_handle)
   self.handle = forms.label(form_handle, self.label, self.x, self.y,
     self.width, self.height, self.fixedWidth)
   if self.onclick ~= Z.UNDEFINED then
-    forms.addclick(self.handle, Z.click_handler_wrapper(self.onclick))
+    forms.addclick(self.handle, Z.click_handler_wrapper(self, self.onclick))
   end
   self:_set_text_align()
 end

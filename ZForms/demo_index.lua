@@ -10,10 +10,17 @@ zform_demo_index_is_loaded = true
 zform_current_demo = nil
 
 
-function run_external_demo(name)
+function stop_demo()
   if zform_current_demo and zform_current_demo.stop then
     zform_current_demo.stop()
   end
+  zform_current_demo = nil
+end
+
+function run_external_demo(button)
+  stop_demo()
+
+  local name = button.data
 
   -- If the module had been loaded before, let's force a reload.
   package.loaded[name] = nil
@@ -22,11 +29,15 @@ function run_external_demo(name)
   zform_current_demo.start()
 end
 
+function close_all()
+  stop_demo()
+  ff:destroy()
+end
+
 
 form_definition = {
   type = "form",
   width = 200,
-  where = 1,
   child = {
     type = "stacking",
     --children_base_height = 32,  -- Default height for children, can be overriden
@@ -48,17 +59,9 @@ form_definition = {
       {type = "button", id = "BUTTON4", label = "Button 4", height=32},
       {type = "button", id = "BUTTON5", label = "Button 5", width=64},
       --]]
-      {type = "button", label = "Form demo 1", onclick = function()
-        run_external_demo("demo_form_1")
-      end},
-      {type = "button", id = "MOVE", label = "MOVE", onclick = function()
-        ff.where = ff.where + 1
-        if ff.where > 16 then
-          ff.where = 1
-        end
-        ff:calculate_xy_from_where()
-        ff:setlocation()
-      end},
+      {type = "button", label = "Form demo 1", onclick = run_external_demo, data = "demo_form_1"},
+      {type = "button", label = "Form \"where\" demo", onclick = run_external_demo, data = "demo_form_where"},
+      {type = "button", label = "Close all", onclick = close_all},
     },
   },
 }

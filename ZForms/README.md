@@ -34,12 +34,18 @@ Make sure `ZForms.lua` file is in the same directory as your Lua script. Then ju
     Z = require("ZForms")
 ```
 
+If you don't want the `Z` variable in the global scope, you can add the `local` keyword:
+
+```lua
+    local Z = require("ZForms")
+```
+
 If you make changes to `ZForms.lua` file, those changes won't be visible until you reload the module. You can force reloading it by writing:
 
 ```lua
     -- Only required if you modify ZForms.lua.
     package.loaded["ZForms"] = nil
-    Z = require("ZForms")
+    local Z = require("ZForms")
 ```
 
 ### Basic concepts
@@ -73,6 +79,7 @@ Some objects are responsible for defining the layout of other objects. So far, `
 
 * `x`, `y`, `width`, `height` = Mostly optional, as default values are automatically set. Required for fine-tuning (such as when fitting a long text to a label).
 * `id` = String that identifies a single UI object.
+* `data` = Placeholder for any custom data (it is not used by ZForms module). Can be used for whatever purpose, such as having a single *onclick* handler on several buttons.
 
 #### Common instance methods
 
@@ -84,6 +91,11 @@ Some objects are responsible for defining the layout of other objects. So far, `
 * `:update_coords(x, y, available_width, available_height)` - Used internally, should not be used unless you are dynamically changing sizes and positions. TODO: Explain this.
 * `build(form_handle)` - Used internally to create the .Net widgets. You should not call this manually, unless you really know what you are doing.
 
+#### Common instance properties
+
+* `:Left()`, `:Right()`, `:Top()`, `:Bottom()` - Position of each edge. (integer)
+* `:Width()`, `:Height()` - Size of the widget (for the form window, it is the external size, including the borders and titlebar). (integer)
+*
 ### Z.Form
 
 Defines a form window, which will contain all other UI elements.
@@ -100,7 +112,7 @@ Defines a form window, which will contain all other UI elements.
 * `type` = Must be `"form"`.
 * `child` = Must be a definition of another widget. Usually, it is a `Z.Stacking` definition.
 * `title` = Optional window title, as string.
-* `where` = Optional form location, relative to the main BizHawk window. Search for `Z.Form.where` at `ZForms.lua` for details.
+* `where` = Optional form location, relative to the main BizHawk window. Search for `Z.Form.where` at `ZForms.lua` for details, or just look at `demo_form_where.lua`.
 * `default_width`, `default_height` = Optional integers for the default window size. When possible, the ZForm module will try to automatically calculate the dimensions to fit all children.
 
 #### Z.Form instance methods
@@ -110,8 +122,6 @@ Defines a form window, which will contain all other UI elements.
 
 #### Z.Form instance properties
 
-* `:Left()`, `:Right()`, `:Top()`, `:Bottom()` - Coordinates at the screen. (integer)
-* `:Width()`, `:Height()` - Size of the form window (external size, including the borders and titlebar). (integer)
 * `:Title()` or `:Text()` - Title of the form window. (string)
 * `:TopMost()` - Set the form window always-on-top of other windows. (boolean)
 
