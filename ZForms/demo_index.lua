@@ -66,16 +66,6 @@ form_definition = {
       {type = "button", label = "UseWaitCursor", onclick = function(self)
         print(ff:UseWaitCursor(not ff:UseWaitCursor()))
       end},
-      {type = "button", label = "TopLevel=true", onclick = function(self)
-        print(ff:get("TopLevel"))
-        ff:set("TopLevel", true)
-        print(ff:get("TopLevel"))
-      end},
-      {type = "button", label = "TopLevel=false", onclick = function(self)
-        print(ff:get("TopLevel"))
-        ff:set("TopLevel", false)
-        print(ff:get("TopLevel"))
-      end},
       {type = "spacer"},
       {type = "button", label = "Close all", onclick = close_all},
     },

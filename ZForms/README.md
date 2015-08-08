@@ -81,6 +81,7 @@ Some objects are responsible for defining the layout of other objects. So far, `
 * `id` = String that identifies a single UI object.
 * `data` = Placeholder for any custom data (it is not used by ZForms module). Can be used for whatever purpose, such as having a single *onclick* handler on several buttons.
 * `enabled` = Optional boolean, the widget will be disabled if set to false.
+* `visible` = Optional boolean, the widget will be invisible if set to false.
 * `tabindex` = Optional integer specifying its tab order (i.e. the order when the user presses the Tab key). Not used for forms or labels.
 
 #### Common instance methods
@@ -98,6 +99,7 @@ Some objects are responsible for defining the layout of other objects. So far, `
 * `:Left()`, `:Right()`, `:Top()`, `:Bottom()` - Position of each edge. (integer)
 * `:Width()`, `:Height()` - Size of the widget (for the form window, it is the external size, including the borders and titlebar). (integer)
 * `:Enabled()` - Defines if the widget will be enabled (can respond to user interaction) or disabled. (boolean)
+* `:Visible()` - Defines if the widget will be visible or hidden. (boolean)
 * `:TabIndex()` - A number specifying its tab order (i.e. the order when the user presses the Tab key). (integer)
 * `:UseWaitCursor()` - Shows the hourglass (busy) mouse cursor when the pointer is on top of this widget. (boolean)
 

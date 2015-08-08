@@ -184,6 +184,7 @@ Z.COMMON_COORD_ATTRIBUTES = {
 }
 Z.COMMON_WIDGET_ATTRIBUTES = Z.table_join(Z.COMMON_COORD_ATTRIBUTES, {
   enabled = Z.UNDEFINED,  -- Boolean.
+  visible = Z.UNDEFINED,  -- Boolean.
   onclick = Z.UNDEFINED,  -- onclick is only supported on Button, Checkbox.
   handle = Z.UNDEFINED,  -- Numeric id used by BizHawk.
 })
@@ -246,6 +247,7 @@ Z.BaseWidgetClass.Width  = Z.NewProperty("int", "Width")
 Z.BaseWidgetClass.Height = Z.NewProperty("int", "Height")
 
 Z.BaseWidgetClass.Enabled = Z.NewProperty("boolean", "Enabled")
+Z.BaseWidgetClass.Visible = Z.NewProperty("boolean", "Visible")
 Z.BaseWidgetClass.TabIndex = Z.NewProperty("int", "TabIndex")
 Z.BaseWidgetClass.UseWaitCursor = Z.NewProperty("boolean", "UseWaitCursor")
 
@@ -481,6 +483,7 @@ function Z.Form:build()
     self:setlocation()
   end
   self:Enabled(self.enabled)
+  self:Visible(self.visible)
   self:ControlBox(self.controlbox)
   self:ShowIcon(self.showicon)
   self:TopMost(self.topmost)
@@ -561,6 +564,7 @@ function Z.Checkbox:build(form_handle)
   self.handle = forms.checkbox(form_handle, self.label, self.x, self.y)
   self:setsize()
   self:Enabled(self.enabled)
+  self:Visible(self.visible)
   self:TabIndex(self.tabindex)
   if self.onclick ~= Z.UNDEFINED then
     forms.addclick(self.handle, Z.click_handler_wrapper(self, self.onclick))
@@ -587,6 +591,7 @@ function Z.Button:build(form_handle)
   self.handle = forms.button(form_handle, self.label,
     Z.click_handler_wrapper(self, self.onclick), self.x, self.y, self.width, self.height)
   self:Enabled(self.enabled)
+  self:Visible(self.visible)
   self:TabIndex(self.tabindex)
 end
 
@@ -610,6 +615,7 @@ function Z.Label:build(form_handle)
   self.handle = forms.label(form_handle, self.label, self.x, self.y,
     self.width, self.height, self.fixedWidth)
   self:Enabled(self.enabled)
+  self:Visible(self.visible)
   if self.onclick ~= Z.UNDEFINED then
     -- TODO: Does it even work for labels?
     forms.addclick(self.handle, Z.click_handler_wrapper(self, self.onclick))
