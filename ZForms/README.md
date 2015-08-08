@@ -159,7 +159,16 @@ Layout manager that places the children elements vertically after each other. Th
 
 ### TODO!
 
-Document Checkbox, Button, Label, Spacer.
+* Document:
+    * Checkbox, Button, Label, Spacer
+* Implement:
+    * Storing the `id` of each element in a convenient place.
+    * Absolute layout manager.
+    * MAYBE side-by-side layout.
+    * MAYBE grid layout.
+    * Dropdown widget.
+    * Other widgets?
+    * More demos!
 
 .Net properties and type conversions
 ------------------------------------
