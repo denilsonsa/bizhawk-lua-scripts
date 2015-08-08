@@ -149,3 +149,20 @@ Layout manager that places the children elements vertically after each other. Th
 ### TODO!
 
 Document Checkbox, Button, Label, Spacer.
+
+.Net properties of type enum
+----------------------------
+
+It is not possible to set the value of a .Net property of type `enum`. It throws the following exception when passing a string:
+
+> An exception of type 'System.InvalidCastException' occurred in mscorlib.dll but was not handled in user code
+>
+> Additional information: Invalid cast from 'System.String' to 'System.Windows.Forms.FormBorderStyle'.
+
+Or this exception when passing a number (all Lua numbers are floating point):
+
+> An exception of type 'System.InvalidCastException' occurred in mscorlib.dll but was not handled in user code
+>
+> Additional information: Invalid cast from 'System.Double' to 'System.Drawing.ContentAlignment'.
+
+If anyone wants to fix this limitation in BizHawk, look for [`SetProperty()` method in `EmuLuaLibrary.forms.cs`](https://github.com/TASVideos/BizHawk/blob/64126fbad/BizHawk.Client.EmuHawk/tools/Lua/Libraries/EmuLuaLibrary.Forms.cs#L489), also look at `demo_enum_property.lua`.

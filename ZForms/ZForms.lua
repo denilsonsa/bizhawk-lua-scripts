@@ -171,28 +171,6 @@ Z.COMMON_WIDGET_ATTRIBUTES = Z.table_join(Z.COMMON_COORD_ATTRIBUTES, {
   handle = Z.UNDEFINED,  -- Numeric id used by BizHawk.
 })
 
--- Based on .Net System.Drawing.ContentAlignment, used by Z.Checkbox and Z.Label.
-Z.CONTENT_ALIGNMENT = {
-  topleft = 1,
-  topcenter = 2,
-  topright = 4,
-  middleleft = 16,
-  middlecenter = 32,
-  middleright = 64,
-  bottomleft = 256,
-  bottomcenter = 512,
-  bottomright = 1024,
-  ["top-left"] = 1,
-  ["top-center"] = 2,
-  ["top-right"] = 4,
-  ["middle-left"] = 16,
-  ["middle-center"] = 32,
-  ["middle-right"] = 64,
-  ["bottom-left"] = 256,
-  ["bottom-center"] = 512,
-  ["bottom-right"] = 1024,
-}
-
 -- Constants (that may, someday, be auto-calculated).
 -- TODO: auto-detect it using Z.Form property "ClientSize" (which returns "{Width=192, Height=257}")
 Z.BORDER_WIDTH = 8  -- The form window bevel.
@@ -264,15 +242,6 @@ end
 
 function Z.BaseWidgetClass.setsize(self)
   forms.setsize(self.handle, self.width, self.height)
-end
-
-function Z.BaseWidgetClass._set_text_align(self)
-  if self.align ~= Z.UNDEFINED then
-    local value = Z.CONTENT_ALIGNMENT[string.lower(self.align)]
-    if value ~= nil then
-      forms.setproperty(self.handle, "TextAlign", value)
-    end
-  end
 end
 
 ---------------------------------------------------------------------------
@@ -553,7 +522,6 @@ function Z.Checkbox:init(initial_values)
     self,
     Z.table_join(Z.COMMON_WIDGET_ATTRIBUTES, {
       label = "",
-      align = Z.UNDEFINED,
     }),
     initial_values)
 end
@@ -564,7 +532,6 @@ function Z.Checkbox:build(form_handle)
   if self.onclick ~= Z.UNDEFINED then
     forms.addclick(self.handle, Z.click_handler_wrapper(self, self.onclick))
   end
-  self:_set_text_align()
 end
 
 ---------------------------------------------------------------------------
@@ -599,7 +566,6 @@ function Z.Label:init(initial_values)
     Z.table_join(Z.COMMON_WIDGET_ATTRIBUTES, {
       label = "",
       fixedWidth = false,
-      align = Z.UNDEFINED,
     }),
     initial_values)
 end
@@ -610,7 +576,6 @@ function Z.Label:build(form_handle)
   if self.onclick ~= Z.UNDEFINED then
     forms.addclick(self.handle, Z.click_handler_wrapper(self, self.onclick))
   end
-  self:_set_text_align()
 end
 
 ---------------------------------------------------------------------------

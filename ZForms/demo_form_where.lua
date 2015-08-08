@@ -18,6 +18,7 @@ local function open_using_numbers()
   destroy_open_forms()
 
   for i=0,16 do
+    -- Opening one form for each possibe "where" value.
     local form = Z.Form({
       type = "form",
       height = 64,
@@ -26,6 +27,7 @@ local function open_using_numbers()
       where = i,
       child = {type = "label", label = "where = " .. tostring(i)}
     })
+
     open_forms[#open_forms + 1] = form
   end
 
@@ -58,6 +60,7 @@ local function open_using_strings()
     "corner-top-left",
     "corner-left-top",
   }) do
+    -- Opening one form for each possibe "where" value.
     local form = Z.Form({
       type = "form",
       height = 64,
@@ -66,6 +69,7 @@ local function open_using_strings()
       where = value,
       child = {type = "label", label = "where = " .. value}
     })
+
     open_forms[#open_forms + 1] = form
   end
 
