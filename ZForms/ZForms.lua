@@ -259,11 +259,19 @@ function Z.BaseWidgetClass.set(self, prop, value)
   forms.setproperty(self.handle, prop, value)
 end
 
-function Z.BaseWidgetClass.setlocation(self)
+function Z.BaseWidgetClass.setlocation(self, x, y)
+  if x ~= nil and y ~= nil then
+    self.x = x
+  self.y = y
+  end
   forms.setlocation(self.handle, self.x, self.y)
 end
 
-function Z.BaseWidgetClass.setsize(self)
+function Z.BaseWidgetClass.setsize(self, width, height)
+  if width ~= nil and height ~= nil then
+    self.width = width
+  self.height = height
+  end
   forms.setsize(self.handle, self.width, self.height)
 end
 
@@ -303,8 +311,13 @@ Z.Form.type = "form"
 Z.Form.ControlBox = Z.NewProperty("boolean", "ControlBox")
 Z.Form.ShowIcon   = Z.NewProperty("boolean", "ShowIcon")
 Z.Form.TopMost = Z.NewProperty("boolean", "TopMost")
+
+-- TODO: Remove "Title", replace it with just "Text".
 Z.Form.Title   = Z.NewProperty("string", "Text")
 Z.Form.Text    = Z.NewProperty("string", "Text")
+
+-- TODO: Move text to the base widget.
+-- TODO: Add method settext() (that calls forms.settext(self.handle, ...).
 
 function Z.Form:destroy()
   return forms.destroy(self.handle)
@@ -314,6 +327,7 @@ function Z.Form:init(initial_values)
   Z.SetInitialInstanceAttributes(
     self,
     Z.table_join(Z.COMMON_WIDGET_ATTRIBUTES, {
+      -- TODO: Remove "title", replace it with just "text".
       title = "Lua script window",
       child = Z.UNDEFINED,
       where = Z.UNDEFINED,
@@ -550,6 +564,9 @@ end
 Z.Checkbox = Z.NewClass(Z.BaseWidgetClass)
 Z.Checkbox.type = "checkbox"
 
+-- TODO: Checked property
+-- TODO: ischecked method
+
 function Z.Checkbox:init(initial_values)
   Z.SetInitialInstanceAttributes(
     self,
@@ -576,6 +593,9 @@ end
 
 Z.Button = Z.NewClass(Z.BaseWidgetClass)
 Z.Button.type = "button"
+
+-- TODO: try property AutoEllipsis
+-- TODO: property Text
 
 function Z.Button:init(initial_values)
   Z.SetInitialInstanceAttributes(

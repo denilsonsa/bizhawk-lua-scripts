@@ -48,6 +48,13 @@ If you make changes to `ZForms.lua` file, those changes won't be visible until y
     local Z = require("ZForms")
 ```
 
+If you want to store `ZForms.lua` inside a subdirectory, use the dot syntax:
+
+```lua
+    -- The file is located at "./foo/bar/ZForms.lua".
+    local Z = require("foo.bar.ZForms")
+```
+
 ### Basic concepts
 
 Each UI element is a Lua object of a certain Lua class (both classes and objects are implemented using Lua tables).
@@ -89,8 +96,8 @@ Some objects are responsible for defining the layout of other objects. So far, `
 * `:get(prop)` - Calls `forms.getproperty()` to retrieve the value of the specified .Net property, returns a string. You should probably use the specific methods instead (such as `:Text()` or `:Left()`).
 
 * `:set(prop, value)` - Calls `forms.setproperty()` to set the value of the specified .Net property. You should probably use the specific methods instead (such as `:Text()` or `:Left()`).
-* `:setlocation()` - Calls `forms.setlocation()` passing `self.x` and `self.y`. You shouldn't need to call this.
-* `:setsize()` - Calls `forms.setsize()` passing `self.width` and `self.height`. You shouldn't need to call this.
+* `:setlocation()` - Calls `forms.setlocation()` passing `self.x` and `self.y`. Optionally receives `x` and `y` as parameters and update `self.x` and `self.y` values. You shouldn't need to call this, unless you are dynamically relocating a widget.
+* `:setsize()` - Calls `forms.setsize()` passing `self.width` and `self.height`. Optionally receives `width` and `height` as parameters and update `self.width` and `self.height` values. You shouldn't need to call this, unless you are dynamically resizing a widget.
 * `:update_coords(x, y, available_width, available_height)` - Used internally, should not be used unless you are dynamically changing sizes and positions. TODO: Explain this.
 * `build(form_handle)` - Used internally to create the .Net widgets. You should not call this manually, unless you really know what you are doing.
 
@@ -175,16 +182,23 @@ Layout manager that places the children elements vertically after each other. Th
 
 It is not possible to set the value of a .Net property of the following types:
 
-* Any `enum` type (such as `ContentAlignment`, `FormBorderStyle`)
+* `Appearance`
+* `CheckState`
+* `ContentAlignment`
+* `FormBorderStyle`
 * `Color`
 * `Cursor`
+* `FlatStyle`
 * `Font`
-* Any other non-primitive type
+* Any other non-primitive type (including enums)
 
 This affects the following properties:
 
+* `Appearance`
 * `BackColor`, `ForeColor`
+* `CheckState`
 * `Cursor`
+* `FlatStyle`
 * `Font`
 * `FormBorderStyle`
 * `TextAlign`
@@ -194,4 +208,4 @@ Trying to set such properties will throw the following exception:
 
 > An exception of type 'System.InvalidCastException' occurred in mscorlib.dll but was not handled in user code
 
-If anyone wants to lift this limitation in BizHawk, look for [`SetProperty()` method in `EmuLuaLibrary.forms.cs`](https://github.com/TASVideos/BizHawk/blob/64126fbad/BizHawk.Client.EmuHawk/tools/Lua/Libraries/EmuLuaLibrary.Forms.cs#L489), also look at `demo_property_types.lua`.
+If anyone wants to lift this limitation in BizHawk, look for [`SetProperty()` method in `EmuLuaLibrary.forms.cs`](https://github.com/TASVideos/BizHawk/blob/64126fbad/BizHawk.Client.EmuHawk/tools/Lua/Libraries/EmuLuaLibrary.Forms.cs#L489), also look at `demo_property_types.lua`. Not all of these properties are extremely useful, though.

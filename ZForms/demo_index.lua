@@ -60,8 +60,9 @@ form_definition = {
       {type = "button", id = "BUTTON4", label = "Button 4", height=32},
       {type = "button", id = "BUTTON5", label = "Button 5", width=64},
       --]]
-      {type = "button", label = "Form demo 1", onclick = run_external_demo, data = "demo_form_1"},
+      {type = "button", label = "Basic form demo", onclick = run_external_demo, data = "demo_form_basic"},
       {type = "button", label = "Form \"where\" demo", onclick = run_external_demo, data = "demo_form_where"},
+      {type = "button", label = "Broken .Net properties demo", onclick = run_external_demo, data = "demo_property_types"},
       {type = "spacer"},
       {type = "button", label = "UseWaitCursor", onclick = function(self)
         print(ff:UseWaitCursor(not ff:UseWaitCursor()))
