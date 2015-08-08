@@ -80,6 +80,8 @@ Some objects are responsible for defining the layout of other objects. So far, `
 * `x`, `y`, `width`, `height` = Mostly optional, as default values are automatically set. Required for fine-tuning (such as when fitting a long text to a label).
 * `id` = String that identifies a single UI object.
 * `data` = Placeholder for any custom data (it is not used by ZForms module). Can be used for whatever purpose, such as having a single *onclick* handler on several buttons.
+* `enabled` = Optional boolean, the widget will be disabled if set to false.
+* `tabindex` = Optional integer specifying its tab order (i.e. the order when the user presses the Tab key). Not used for forms or labels.
 
 #### Common instance methods
 
@@ -95,7 +97,10 @@ Some objects are responsible for defining the layout of other objects. So far, `
 
 * `:Left()`, `:Right()`, `:Top()`, `:Bottom()` - Position of each edge. (integer)
 * `:Width()`, `:Height()` - Size of the widget (for the form window, it is the external size, including the borders and titlebar). (integer)
-*
+* `:Enabled()` - Defines if the widget will be enabled (can respond to user interaction) or disabled. (boolean)
+* `:TabIndex()` - A number specifying its tab order (i.e. the order when the user presses the Tab key). (integer)
+* `:UseWaitCursor()` - Shows the hourglass (busy) mouse cursor when the pointer is on top of this widget. (boolean)
+
 ### Z.Form
 
 Defines a form window, which will contain all other UI elements.
@@ -114,16 +119,20 @@ Defines a form window, which will contain all other UI elements.
 * `title` = Optional window title, as string.
 * `where` = Optional form location, relative to the main BizHawk window. Search for `Z.Form.where` at `ZForms.lua` for details, or just look at `demo_form_where.lua`.
 * `default_width`, `default_height` = Optional integers for the default window size. When possible, the ZForm module will try to automatically calculate the dimensions to fit all children.
+* `controlbox` = Optional boolean, if false the icon and the buttons will be removed from the title bar.
+* `showicon` = Optional boolean, if true there will be an icon at the title bar. ZForms sets this to false by default.
+* `topmost` = Optional boolean, sets this form window always-on-top.
 
 #### Z.Form instance methods
 
 * `:destroy()` - Closes the form window. After the form is destroyed, you must not call any other method on the form object, nor access any of the children. Doing so is undefined behavior.
-*
 
 #### Z.Form instance properties
 
 * `:Title()` or `:Text()` - Title of the form window. (string)
-* `:TopMost()` - Set the form window always-on-top of other windows. (boolean)
+* `:ControlBox()` - Shows or hides the icon and the buttons from the title bar. (boolean)
+* `:ShowIcon()` - Shows or hides the icon from the title bar. (boolean)
+* `:TopMost()` - Sets the form window always-on-top of other windows. (boolean)
 
 ### Z.Stacking
 
@@ -150,19 +159,28 @@ Layout manager that places the children elements vertically after each other. Th
 
 Document Checkbox, Button, Label, Spacer.
 
-.Net properties of type enum
-----------------------------
+.Net properties and type conversions
+------------------------------------
 
-It is not possible to set the value of a .Net property of type `enum`. It throws the following exception when passing a string:
+It is not possible to set the value of a .Net property of the following types:
+
+* Any `enum` type (such as `ContentAlignment`, `FormBorderStyle`)
+* `Color`
+* `Cursor`
+* `Font`
+* Any other non-primitive type
+
+This affects the following properties:
+
+* `BackColor`, `ForeColor`
+* `Cursor`
+* `Font`
+* `FormBorderStyle`
+* `TextAlign`
+* Possibly others
+
+Trying to set such properties will throw the following exception:
 
 > An exception of type 'System.InvalidCastException' occurred in mscorlib.dll but was not handled in user code
->
-> Additional information: Invalid cast from 'System.String' to 'System.Windows.Forms.FormBorderStyle'.
 
-Or this exception when passing a number (all Lua numbers are floating point):
-
-> An exception of type 'System.InvalidCastException' occurred in mscorlib.dll but was not handled in user code
->
-> Additional information: Invalid cast from 'System.Double' to 'System.Drawing.ContentAlignment'.
-
-If anyone wants to fix this limitation in BizHawk, look for [`SetProperty()` method in `EmuLuaLibrary.forms.cs`](https://github.com/TASVideos/BizHawk/blob/64126fbad/BizHawk.Client.EmuHawk/tools/Lua/Libraries/EmuLuaLibrary.Forms.cs#L489), also look at `demo_enum_property.lua`.
+If anyone wants to lift this limitation in BizHawk, look for [`SetProperty()` method in `EmuLuaLibrary.forms.cs`](https://github.com/TASVideos/BizHawk/blob/64126fbad/BizHawk.Client.EmuHawk/tools/Lua/Libraries/EmuLuaLibrary.Forms.cs#L489), also look at `demo_property_types.lua`.

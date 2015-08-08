@@ -98,6 +98,16 @@ function Z.SetInitialInstanceAttributes(self, default_attributes, initial_values
       self[key] = initial_values[key]
     end
   end
+
+  -- Error checking.
+  if self.type ~= initial_values.type then
+    print("Warning! Expecting attribute type = '" .. self.type .. "' but received type = '" .. tostring(initial_values.type)"'")
+  end
+  for key, value in pairs(initial_values) do
+    if key ~= "type" and default_attributes[key] == nil then
+      print("Warning! Ignoring unknown attribute '" .. key .. "' passed to " .. self.type)
+    end
+  end
 end
 
 ---------------------------------------------------------------------------
@@ -127,7 +137,7 @@ function Z.NewProperty(type, prop)
   end
 
   return function(self, value)
-    if value ~= nil then
+    if value ~= nil and value ~= Z.UNDEFINED then
       self:set(prop, value)
     end
     return conversion_func(self:get(prop))
@@ -140,7 +150,13 @@ function Z.PropertyConvertToString(value)
 end
 
 function Z.PropertyConvertToInt(value)
-  return math.floor(tonumber(value))
+  local num = tonumber(value)
+  if num then
+    return math.floor(num)
+  else
+    print("Invalid integer string: " .. value)
+    return nil
+  end
 end
 
 function Z.PropertyConvertToBoolean(value)
@@ -167,6 +183,7 @@ Z.COMMON_COORD_ATTRIBUTES = {
   id = Z.UNDEFINED,  -- TODO: use id for something
 }
 Z.COMMON_WIDGET_ATTRIBUTES = Z.table_join(Z.COMMON_COORD_ATTRIBUTES, {
+  enabled = Z.UNDEFINED,  -- Boolean.
   onclick = Z.UNDEFINED,  -- onclick is only supported on Button, Checkbox.
   handle = Z.UNDEFINED,  -- Numeric id used by BizHawk.
 })
@@ -228,6 +245,10 @@ Z.BaseWidgetClass.Bottom = Z.NewProperty("int", "Bottom")
 Z.BaseWidgetClass.Width  = Z.NewProperty("int", "Width")
 Z.BaseWidgetClass.Height = Z.NewProperty("int", "Height")
 
+Z.BaseWidgetClass.Enabled = Z.NewProperty("boolean", "Enabled")
+Z.BaseWidgetClass.TabIndex = Z.NewProperty("int", "TabIndex")
+Z.BaseWidgetClass.UseWaitCursor = Z.NewProperty("boolean", "UseWaitCursor")
+
 function Z.BaseWidgetClass.get(self, prop)
   return forms.getproperty(self.handle, prop)
 end
@@ -277,6 +298,8 @@ end
 Z.Form = Z.NewClass(Z.BaseWidgetClass)
 Z.Form.type = "form"
 
+Z.Form.ControlBox = Z.NewProperty("boolean", "ControlBox")
+Z.Form.ShowIcon   = Z.NewProperty("boolean", "ShowIcon")
 Z.Form.TopMost = Z.NewProperty("boolean", "TopMost")
 Z.Form.Title   = Z.NewProperty("string", "Text")
 Z.Form.Text    = Z.NewProperty("string", "Text")
@@ -294,6 +317,9 @@ function Z.Form:init(initial_values)
       where = Z.UNDEFINED,
       default_width = 128,
       default_height = 128,
+      controlbox = Z.UNDEFINED,
+      showicon = false,
+      topmost = Z.UNDEFINED,
     }),
     initial_values)
 
@@ -454,6 +480,10 @@ function Z.Form:build()
   if self.x ~= Z.UNDEFINED and self.y ~= Z.UNDEFINED then
     self:setlocation()
   end
+  self:Enabled(self.enabled)
+  self:ControlBox(self.controlbox)
+  self:ShowIcon(self.showicon)
+  self:TopMost(self.topmost)
   self.child:build(self.handle)
 end
 
@@ -522,6 +552,7 @@ function Z.Checkbox:init(initial_values)
     self,
     Z.table_join(Z.COMMON_WIDGET_ATTRIBUTES, {
       label = "",
+      tabindex = Z.UNDEFINED,
     }),
     initial_values)
 end
@@ -529,6 +560,8 @@ end
 function Z.Checkbox:build(form_handle)
   self.handle = forms.checkbox(form_handle, self.label, self.x, self.y)
   self:setsize()
+  self:Enabled(self.enabled)
+  self:TabIndex(self.tabindex)
   if self.onclick ~= Z.UNDEFINED then
     forms.addclick(self.handle, Z.click_handler_wrapper(self, self.onclick))
   end
@@ -545,6 +578,7 @@ function Z.Button:init(initial_values)
     self,
     Z.table_join(Z.COMMON_WIDGET_ATTRIBUTES, {
       label = "",
+      tabindex = Z.UNDEFINED,
     }),
     initial_values)
 end
@@ -552,6 +586,8 @@ end
 function Z.Button:build(form_handle)
   self.handle = forms.button(form_handle, self.label,
     Z.click_handler_wrapper(self, self.onclick), self.x, self.y, self.width, self.height)
+  self:Enabled(self.enabled)
+  self:TabIndex(self.tabindex)
 end
 
 ---------------------------------------------------------------------------
@@ -573,7 +609,9 @@ end
 function Z.Label:build(form_handle)
   self.handle = forms.label(form_handle, self.label, self.x, self.y,
     self.width, self.height, self.fixedWidth)
+  self:Enabled(self.enabled)
   if self.onclick ~= Z.UNDEFINED then
+    -- TODO: Does it even work for labels?
     forms.addclick(self.handle, Z.click_handler_wrapper(self, self.onclick))
   end
 end

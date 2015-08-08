@@ -38,6 +38,7 @@ end
 form_definition = {
   type = "form",
   width = 200,
+  topmost = true,
   child = {
     type = "stacking",
     --children_base_height = 32,  -- Default height for children, can be overriden
@@ -61,13 +62,27 @@ form_definition = {
       --]]
       {type = "button", label = "Form demo 1", onclick = run_external_demo, data = "demo_form_1"},
       {type = "button", label = "Form \"where\" demo", onclick = run_external_demo, data = "demo_form_where"},
+      {type = "spacer"},
+      {type = "button", label = "UseWaitCursor", onclick = function(self)
+        print(ff:UseWaitCursor(not ff:UseWaitCursor()))
+      end},
+      {type = "button", label = "TopLevel=true", onclick = function(self)
+        print(ff:get("TopLevel"))
+        ff:set("TopLevel", true)
+        print(ff:get("TopLevel"))
+      end},
+      {type = "button", label = "TopLevel=false", onclick = function(self)
+        print(ff:get("TopLevel"))
+        ff:set("TopLevel", false)
+        print(ff:get("TopLevel"))
+      end},
+      {type = "spacer"},
       {type = "button", label = "Close all", onclick = close_all},
     },
   },
 }
 
 ff = Z.Form(form_definition)
-
 
 while true do
   -- You must call this function on your main loop.

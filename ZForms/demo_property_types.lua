@@ -5,11 +5,11 @@ local main_form = {}
 local function start_demo()
   main_form = Z.Form({
     type = "form",
-    title = ".Net enum properties",
+    title = ".Net property types",
     child = {
       type = "stacking",
       children = {
-        {type = "label", label = "It is not possible to set enum properties from Lua code. Trying to do so will raise an InvalidCastException.", width = 200, height = 24},
+        {type = "label", label = "It is not possible to set enum properties or color properties from Lua code. Trying to do so will raise an InvalidCastException.", width = 220, height = 64},
         {type = "button", label = "Set FormBorderStyle", onclick = function()
           print(main_form:get("FormBorderStyle"))
           main_form:set("FormBorderStyle", 6)
@@ -23,6 +23,16 @@ local function start_demo()
           print(label:get("TextAlign"))
           label:set("TextAlign", 32)
           label:set("TextAlign", "MiddleCenter")
+          print(label:get("TextAlign"))
+        end},
+        {type = "button", label = "Set label colors", onclick = function()
+          print("TODO: retrieve the label by id")
+
+          local label = main_form.child.children[1]
+          print(label:get("ForeColor"))
+          print(label:get("BackColor"))
+          label:set("ForeColor", 0xFFFFFFFF)
+          label:set("BackColor", "red")
           print(label:get("TextAlign"))
         end},
       },
