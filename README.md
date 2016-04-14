@@ -13,3 +13,4 @@ Also included are some *RAM watch* files, which contain RAM locations I've disco
 * http://tasvideos.org/Bizhawk.html
 * http://tasvideos.org/Bizhawk/LuaFunctions.html
 * https://github.com/TASVideos/BizHawk
+* http://tasvideos.org/forum/viewtopic.php?t=16191
