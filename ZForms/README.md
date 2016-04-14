@@ -3,6 +3,15 @@ ZForms
 
 A Lua wrapper around BizHawk's `forms` module.
 
+Status
+------
+
+The code here can be considered a **prototype** or a **tech demo**. I wrote this code and had fun with it, but later had to stop working on it due other priorities. Lots of planned features (most of them were planned only in my head) are not implemented.
+
+Almost one year has passed since I last touched this code, mostly because BizHawk only runs on Windows and my main machine is Linux-based. I'd love to have a fully-featured library including lots of demo scripts showing the capabilities; but I have to admit this is unlikely to happen in the near future (at least from my hands).
+
+I hope the code here serves as an inspiration for anyone who wants to create a better UI library for BizHawk's Lua scripts.
+
 Why?
 ----
 
